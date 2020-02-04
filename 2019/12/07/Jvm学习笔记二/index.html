@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-pace-theme-center-atom.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="JVM学习笔记">
+<meta name="keywords" content="JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Jvm学习笔记二">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;12&#x2F;07&#x2F;Jvm%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E4%BA%8C&#x2F;index.html">
+<meta property="og:site_name" content="三笠·阿克曼">
+<meta property="og:description" content="JVM学习笔记">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;12&#x2F;07&#x2F;Jvm%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E4%BA%8C&#x2F;JVM学习笔记二&#x2F;1.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;12&#x2F;07&#x2F;Jvm%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E4%BA%8C&#x2F;Jvm学习笔记二&#x2F;2.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;12&#x2F;07&#x2F;Jvm%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E4%BA%8C&#x2F;Jvm学习笔记二&#x2F;3.png">
+<meta property="og:updated_time" content="2019-12-11T07:49:14.557Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;12&#x2F;07&#x2F;Jvm%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E4%BA%8C&#x2F;JVM学习笔记二&#x2F;1.png">
+
+<link rel="canonical" href="http://yoursite.com/2019/12/07/Jvm%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E4%BA%8C/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Jvm学习笔记二 | 三笠·阿克曼</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+<!-- 引入看板娘,记得更改为自己的用户名和版本号 -->
+    <script src="https://cdn.jsdelivr.net/gh/wubaii/live2d-widget@1.0.4/autoload.js"></script> 
+    <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">三笠·阿克曼</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/07/Jvm%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E4%BA%8C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="wubaii">
+      <meta itemprop="description" content="この世界は残酷だ…そして美しい">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="三笠·阿克曼">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Jvm学习笔记二
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-07 20:13:47" itemprop="dateCreated datePublished" datetime="2019-12-07T20:13:47+08:00">2019-12-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-11 15:49:14" itemprop="dateModified" datetime="2019-12-11T15:49:14+08:00">2019-12-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index">
+                    <span itemprop="name">JVM</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>JVM学习笔记</p>
+<a id="more"></a>
+
+<h1 id="JVM内存结构"><a href="#JVM内存结构" class="headerlink" title="JVM内存结构"></a>JVM内存结构</h1><h2 id="程序计数器（线程私有）"><a href="#程序计数器（线程私有）" class="headerlink" title="程序计数器（线程私有）"></a>程序计数器（线程私有）</h2><h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>Program Count register 程序计数器（寄存器）</p>
+<ul>
+<li>就是记住<strong>下一条字节码指令的地址。</strong></li>
+</ul>
+<p>特点：</p>
+<ul>
+<li>是<strong>线程私有</strong>的</li>
+<li><strong>不存在内存溢出</strong></li>
+</ul>
+<h3 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h3><p><strong>字节码文件的执行流程：</strong></p>
+<p>拿到一条字节码指令，交给JVM中的解释器，解释器将其翻译成机器指令交给CPU执行。</p>
+<h2 id="虚拟机栈（线程私有）"><a href="#虚拟机栈（线程私有）" class="headerlink" title="虚拟机栈（线程私有）"></a>虚拟机栈（线程私有）</h2><p>###定义</p>
+<p>JAVA Virtual Machine stacks（java虚拟机栈）</p>
+<ul>
+<li>每个线程都有自己独立的虚拟机栈，作为栈的运行时空间。</li>
+<li>线程调用方法时，为方法分配栈帧，作为方法的运行时空间。</li>
+<li>每调用一个方法，就把栈帧压入虚拟机栈。</li>
+<li>同一时间只有一个活动栈帧，对应正在执行的方法。</li>
+<li>无垃圾回收机制，方法执行完弹出栈帧。</li>
+</ul>
+<p><strong>问题：方法内的局部变量是否是线程安全的？</strong></p>
+<ul>
+<li><p>如果方法内的局部变量没有逃离方法的作用范围，则是线程安全的。</p>
+</li>
+<li><p>如果局部变量引用了对象，并逃离了方法的作用范围，则不是线程安全的。</p>
+<p><strong>如将局部变量return</strong></p>
+</li>
+</ul>
+<h3 id="栈内存溢出StackOverflowError"><a href="#栈内存溢出StackOverflowError" class="headerlink" title="栈内存溢出StackOverflowError"></a>栈内存溢出StackOverflowError</h3><ol>
+<li><strong>栈帧过多导致栈内存溢出</strong><ul>
+<li>递归调用</li>
+<li>第三方类库，如Json转换，对象关联导致递归调用</li>
+</ul>
+</li>
+<li>栈帧过大导致栈内存溢出</li>
+</ol>
+<h3 id="线程运行诊断"><a href="#线程运行诊断" class="headerlink" title="线程运行诊断"></a>线程运行诊断</h3><ol>
+<li><p>CPU占用过高（Linux）</p>
+<ul>
+<li><p>用Top指令查看哪个进程对CPU的占用过高</p>
+</li>
+<li><p>用ps H -eo pid,tid,%CPU |grep 进程Id （用ps进一步定位哪个线程引起的CPU占用过高）</p>
+</li>
+<li><p>jstack 进程id</p>
+<ul>
+<li>可以根据线程id找到有问题的线程</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<ol start="2">
+<li>程序长时间运行没有结果—–<strong>死锁</strong><ul>
+<li>jstack 进程id<ul>
+<li>查看出问题的线程</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="本地方法栈（线程私有）"><a href="#本地方法栈（线程私有）" class="headerlink" title="本地方法栈（线程私有）"></a>本地方法栈（线程私有）</h2><p>本地方法执行时的内存空间。</p>
+<h2 id="堆（线程共享）"><a href="#堆（线程共享）" class="headerlink" title="堆（线程共享）"></a>堆（线程共享）</h2><h3 id="定义-1"><a href="#定义-1" class="headerlink" title="定义"></a>定义</h3><p><strong>new 创建的对象全都放在堆中</strong></p>
+<p>特点：</p>
+<ol>
+<li>线程共享，因此堆中对象要考虑共享问题</li>
+<li>有垃圾回收机制—<strong>对象不再被引用时进行回收</strong></li>
+</ol>
+<h3 id="堆内存溢出OutOfMemoryError"><a href="#堆内存溢出OutOfMemoryError" class="headerlink" title="堆内存溢出OutOfMemoryError"></a>堆内存溢出OutOfMemoryError</h3><p>诊断工具：</p>
+<ol>
+<li><p>jps</p>
+<ul>
+<li>查看当前系统中有哪些java进程</li>
+</ul>
+</li>
+<li><p>jmap</p>
+<ul>
+<li>查看堆内存占用情况   jmap -heap 进程id</li>
+</ul>
+</li>
+<li><p>jconsole工具</p>
+</li>
+<li><p>jvisualvm—&gt;堆转储(dump)</p>
+</li>
+</ol>
+<p>##方法区（线程共享）</p>
+<h3 id="定义-2"><a href="#定义-2" class="headerlink" title="定义"></a>定义</h3><ul>
+<li>方法区是所有线程共享的</li>
+<li>存储与<strong>每个类相关的信息、运行时常量池和类加载器</strong>。</li>
+<li>虚拟机启动时被创建，逻辑上是堆的一部分（但可以有很多种实现）。</li>
+</ul>
+<h3 id="组成"><a href="#组成" class="headerlink" title="组成"></a>组成</h3><img src='JVM学习笔记二\1.png'/>
+
+<h3 id="方法区溢出"><a href="#方法区溢出" class="headerlink" title="方法区溢出"></a>方法区溢出</h3><ul>
+<li><p>1.8以前会导致永久代溢出</p>
+<ul>
+<li><pre><code>JDK1.6          java.lang.OutOfMemoryError:   PermGen  Space
+-XX:MaxPermSize=8m
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">* 1.8以后会导致元空间溢出</span><br><span class="line"></span><br><span class="line">  *</span><br></pre></td></tr></table></figure>
+JDK1.8          java.lang.OutOfMemoryError:   Metaspace
+-XX:MaxMetaspaceSize=8m
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">* 场景---**运行时动态生成字节码，动态加载类**</span><br><span class="line">  * Spring</span><br><span class="line">  * Mybatis</span><br><span class="line"></span><br><span class="line">### 运行时常量池</span><br><span class="line"></span><br><span class="line">####常量池</span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">二进制字节码文件组成：类的基本信息，常量池，类方法定义（包含虚拟机指令）</span><br><span class="line"></span><br><span class="line">//类的基本信息</span><br><span class="line">Last modified 2019-12-9; size 540 bytes</span><br><span class="line">  MD5 checksum b9541a15e5cb58ff22210bdd4ccd8dd5</span><br><span class="line">  Compiled from &quot;Test01.java&quot;</span><br><span class="line">public class com.test.Test01</span><br><span class="line">  minor version: 0</span><br><span class="line">  major version: 52</span><br><span class="line">  flags: ACC_PUBLIC, ACC_SUPER</span><br><span class="line">//常量池</span><br><span class="line">Constant pool:</span><br><span class="line">   #1 = Methodref          #6.#20         // java/lang/Object.&quot;&lt;init&gt;&quot;:()V</span><br><span class="line">   #2 = Fieldref           #21.#22        // java/lang/System.out:Ljava/io/PrintStream;</span><br><span class="line">   #3 = String             #23            // Hello World!</span><br><span class="line">   #4 = Methodref          #24.#25        // java/io/PrintStream.println:(Ljava/lang/String;)V</span><br><span class="line">   #5 = Class              #26            // com/test/Test01</span><br><span class="line">   #6 = Class              #27            // java/lang/Object</span><br><span class="line">   #7 = Utf8               &lt;init&gt;</span><br><span class="line">   #8 = Utf8               ()V</span><br><span class="line">   #9 = Utf8               Code</span><br><span class="line">  #10 = Utf8               LineNumberTable</span><br><span class="line">  #11 = Utf8               LocalVariableTable</span><br><span class="line">  #12 = Utf8               this</span><br><span class="line">  #13 = Utf8               Lcom/test/Test01;</span><br><span class="line">  #14 = Utf8               main</span><br><span class="line">  #15 = Utf8               ([Ljava/lang/String;)V</span><br><span class="line">  #16 = Utf8               args</span><br><span class="line">  #17 = Utf8               [Ljava/lang/String;</span><br><span class="line">  #18 = Utf8               SourceFile</span><br><span class="line">  #19 = Utf8               Test01.java</span><br><span class="line">  #20 = NameAndType        #7:#8          // &quot;&lt;init&gt;&quot;:()V</span><br><span class="line">  #21 = Class              #28            // java/lang/System</span><br><span class="line">  #22 = NameAndType        #29:#30        // out:Ljava/io/PrintStream;</span><br><span class="line">  #23 = Utf8               Hello World!</span><br><span class="line">  #24 = Class              #31            // java/io/PrintStream</span><br><span class="line">  #25 = NameAndType        #32:#33        // println:(Ljava/lang/String;)V</span><br><span class="line">  #26 = Utf8               com/test/Test01</span><br><span class="line">  #27 = Utf8               java/lang/Object</span><br><span class="line">  #28 = Utf8               java/lang/System</span><br><span class="line">  #29 = Utf8               out</span><br><span class="line">  #30 = Utf8               Ljava/io/PrintStream;</span><br><span class="line">  #31 = Utf8               java/io/PrintStream</span><br><span class="line">  #32 = Utf8               println</span><br><span class="line">  #33 = Utf8               (Ljava/lang/String;)V</span><br><span class="line">//类方法定义</span><br><span class="line">&#123;</span><br><span class="line">  public com.test.Test01();</span><br><span class="line">    descriptor: ()V</span><br><span class="line">    flags: ACC_PUBLIC</span><br><span class="line">    Code:</span><br><span class="line">      stack=1, locals=1, args_size=1</span><br><span class="line">         0: aload_0</span><br><span class="line">         1: invokespecial #1                  // Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V</span><br><span class="line">         4: return</span><br><span class="line">      LineNumberTable:</span><br><span class="line">        line 3: 0</span><br><span class="line">      LocalVariableTable:</span><br><span class="line">        Start  Length  Slot  Name   Signature</span><br><span class="line">            0       5     0  this   Lcom/test/Test01;</span><br><span class="line"></span><br><span class="line">  public static void main(java.lang.String[]);</span><br><span class="line">    descriptor: ([Ljava/lang/String;)V</span><br><span class="line">    flags: ACC_PUBLIC, ACC_STATIC</span><br><span class="line">    Code:</span><br><span class="line">      stack=2, locals=1, args_size=1</span><br><span class="line">         0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;</span><br><span class="line">         3: ldc           #3                  // String Hello World!</span><br><span class="line">         5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V</span><br><span class="line">         8: return</span><br><span class="line">      LineNumberTable:</span><br><span class="line">        line 5: 0</span><br><span class="line">        line 6: 8</span><br><span class="line">      LocalVariableTable:</span><br><span class="line">        Start  Length  Slot  Name   Signature</span><br><span class="line">            0       9     0  args   [Ljava/lang/String;</span><br><span class="line">&#125;</span><br><span class="line">SourceFile: &quot;Test01.java&quot;</span><br></pre></td></tr></table></figure>
+</code></pre></li>
+</ul>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//常量池的作用就是给虚拟机指令提供常量符号。</span></span><br><span class="line">0: getstatic     #2                  </span><br><span class="line">3: ldc           #3                  </span><br><span class="line">5: invokevirtual #4                  (Ljava/lang/String;)V</span><br><span class="line"><span class="number">8</span>: <span class="keyword">return</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="运行时常量池"><a href="#运行时常量池" class="headerlink" title="运行时常量池"></a>运行时常量池</h4><ul>
+<li>常量池就是一张表, 虚拟机指令根据这张常量表找到要执行的<strong>类名、方法名、参数信息、字面量</strong>等。</li>
+<li><strong>常量池是在*.calss文件，</strong>意思就是二进制字节码文件。</li>
+<li>在运行时，<strong>常量池中的信息就会放入运行时常量池，并把里面的符号地址变为真实地址。</strong></li>
+</ul>
+<h3 id="StringTable（串池）"><a href="#StringTable（串池）" class="headerlink" title="StringTable（串池）"></a>StringTable（串池）</h3><h4 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h4><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">String s1=<span class="string">"a"</span>;</span><br><span class="line">String s2=<span class="string">"b"</span>;</span><br><span class="line">String s3=<span class="string">"ab"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">0: ldc           #2                  // String a</span><br><span class="line"><span class="number">2</span>: astore_1</span><br><span class="line">3: ldc           #3                  // String b</span><br><span class="line"><span class="number">5</span>: astore_2</span><br><span class="line">6: ldc           #4                  // String ab</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>常量池中的符号，在运行时都会被加载到运行时常量池中，这是a、b、ab都只是运行时常量池中的符号，<strong>还没有变为字符串对象（延迟加载）。</strong></p>
+</li>
+<li><p><strong>只有在执行到引用该符号的代码上，才会将其变为字符串对象</strong>，先在串池中查找：</p>
+<ul>
+<li>若串池中没有，则创建并将其放入串池</li>
+<li>若串池中存在，则使用串池中的。</li>
+</ul>
+</li>
+<li><p>StringTable（串池）：HashTable结构，不能扩容。</p>
+</li>
+</ul>
+<h4 id="字符串拼接操作"><a href="#字符串拼接操作" class="headerlink" title="字符串拼接操作"></a>字符串拼接操作</h4><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">String s4=s1+s2;  </span><br><span class="line">---<span class="keyword">new</span> StringBuilder().append(<span class="string">"a"</span>).append(<span class="string">"b"</span>).toString();</span><br><span class="line">---toString()===<span class="keyword">new</span> String();</span><br><span class="line"></span><br><span class="line">         9: new           #5                  // class java/lang/StringBuilder</span><br><span class="line">        <span class="number">12</span>: dup</span><br><span class="line">        13: invokespecial #6                  // Method java/lang/StringBuilder."&lt;init&gt;":</span><br><span class="line">        <span class="number">16</span>: aload_1</span><br><span class="line">        17: invokevirtual #7                  // Method java/lang/StringBuilder.append:</span><br><span class="line">        <span class="number">20</span>: aload_2</span><br><span class="line">        21: invokevirtual #7                  // Method java/lang/StringBuilder.append:</span><br><span class="line">        24: invokevirtual #8                  // Method java/lang/StringBuilder.toString:</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>String s3=&quot;ab&quot;;</code>这个字符串对象是放在串池中的</li>
+<li><code>String s4=s1+s2;</code>根据上面的分析可以看出，这是新创建了一个字符串对象，放在堆中。</li>
+<li>因此<code>s3==s4</code>的结果为<code>false</code></li>
+</ul>
+<h4 id="编译时优化"><a href="#编译时优化" class="headerlink" title="编译时优化"></a>编译时优化</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String s5=<span class="string">"a"</span>+<span class="string">"b"</span>;  <span class="comment">//直接到常量池中找到“ab”</span></span><br><span class="line">        </span><br><span class="line">        29: ldc           #4                  // String ab</span><br><span class="line">        <span class="number">31</span>: astore        <span class="number">5</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>针对字符串常量拼接，结果在编译时已确定，javac在编译时期可以进行优化。</li>
+<li>而对于变量则不能进行优化。</li>
+</ul>
+<h4 id="StringTable特性总结"><a href="#StringTable特性总结" class="headerlink" title="StringTable特性总结"></a>StringTable特性总结</h4><ul>
+<li><strong>常量池中的字符串仅是符号</strong>，第一次使用时才变为对象，并且放入串池。</li>
+<li>串池可以避免重复创建字符串。</li>
+<li>字符串变量的拼接原理是<code>StringBuilder</code></li>
+<li>字符串常量的拼接原理是编译时优化</li>
+<li><strong><code>intern</code>方法可以主动将不在串池中的字符串对象放入串池。</strong><ul>
+<li><strong>1.8</strong>尝试将字符串对象放入串池，如果串池中有则不会放入，如果没有就放入串池。会把串池中的对象放回。（如果串池原先没有，返回的就是自己）。</li>
+<li><strong>1.6</strong>尝试将字符串对象放入串池，如果串池中有则不会放入，如果<strong>没有会把此对象复制一份放入串池</strong>。然后把串池中的对象返回。</li>
+</ul>
+</li>
+</ul>
+<h4 id="intern方法"><a href="#intern方法" class="headerlink" title="intern方法"></a>intern方法</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String s=<span class="keyword">new</span> String(<span class="string">"a"</span>)+<span class="keyword">new</span> String(<span class="string">"b"</span>);  <span class="comment">//s="ab"</span></span><br><span class="line"></span><br><span class="line">s.intern();  <span class="comment">//尝试将字符串对象放入串池，如果串池中有则不会放入，如果没有就放入串池。</span></span><br><span class="line">			 <span class="comment">//无论串池中有没有，都会返回串池中对象(没有就还是自己)。</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>a</code>和<code>b</code>不仅在串池中有，在堆中也有</li>
+<li>而<code>ab</code>只在堆中有</li>
+<li><strong>两个字符串变量拼接后的字符串对象只存在于堆中。</strong></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">String x=<span class="string">"ab"</span></span><br><span class="line">String s=<span class="keyword">new</span> String(<span class="string">"a"</span>)+<span class="keyword">new</span> String(<span class="string">"b"</span>);  <span class="comment">//s="ab"</span></span><br><span class="line">String s2=s.intern();</span><br><span class="line">s==x  <span class="comment">//false</span></span><br><span class="line">s2==x <span class="comment">//true</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="StringTable位置"><a href="#StringTable位置" class="headerlink" title="StringTable位置"></a>StringTable位置</h4><ul>
+<li><p>1.6用的是永久代，StringTable位于运行时常量池中。</p>
+</li>
+<li><p>1.8用的是堆空间，StringTable位于堆空间中。</p>
+</li>
+<li><p><strong>垃圾回收机制不同。</strong></p>
+<ul>
+<li>1.6 永久代 Full GC</li>
+<li>1,8 堆 Mini GC</li>
+</ul>
+</li>
+</ul>
+<h4 id="StringTable垃圾回收"><a href="#StringTable垃圾回收" class="headerlink" title="StringTable垃圾回收"></a>StringTable垃圾回收</h4><h4 id="StringTable性能调优"><a href="#StringTable性能调优" class="headerlink" title="StringTable性能调优"></a>StringTable性能调优</h4><ul>
+<li><p>StringTable<strong>本质是个哈希表</strong></p>
+</li>
+<li><p>如果字符串常量比较多，可以将StringTable的桶的个数适量增多。<code>-XX:StringTableSize=200000</code></p>
+</li>
+<li><p>如果有大量重复字符串，使用intern()将字符串入池后可以大大减少重复字符串对象。</p>
+</li>
+</ul>
+<p>##直接内存（操作系统内存）</p>
+<p>###特点</p>
+<ul>
+<li><strong>不属于虚拟机内存</strong>。</li>
+<li>常见于nio操作，用于数据缓冲区。</li>
+<li>分配回收成本高，但读写性能高。</li>
+<li>不受JVM内存回收管理。</li>
+</ul>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><p>不使用直接内存的文件读写：</p>
+<img src="Jvm学习笔记二/2.png"/>
+
+<p>使用直接内存的文件读写：</p>
+<img src="Jvm学习笔记二/3.png"/>
+
+<h3 id="直接内存内存溢出"><a href="#直接内存内存溢出" class="headerlink" title="直接内存内存溢出"></a>直接内存内存溢出</h3><p>Java.lang.OutOfMemoryError: Direct buffer memory</p>
+<h3 id="释放原理"><a href="#释放原理" class="headerlink" title="释放原理"></a>释放原理</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ByteBuffer <span class="title">allocateDirect</span><span class="params">(<span class="keyword">int</span> capacity)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> DirectByteBuffer(capacity);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">DirectByteBuffer(<span class="keyword">int</span> cap) &#123;                   <span class="comment">// package-private</span></span><br><span class="line">        <span class="keyword">super</span>(-<span class="number">1</span>, <span class="number">0</span>, cap, cap);</span><br><span class="line">        <span class="keyword">boolean</span> pa = VM.isDirectMemoryPageAligned();</span><br><span class="line">        <span class="keyword">int</span> ps = Bits.pageSize();</span><br><span class="line">        <span class="keyword">long</span> size = Math.max(<span class="number">1L</span>, (<span class="keyword">long</span>)cap + (pa ? ps : <span class="number">0</span>));</span><br><span class="line">        Bits.reserveMemory(size, cap);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">long</span> base = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">//直接内存的分配</span></span><br><span class="line">            base = unsafe.allocateMemory(size);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (OutOfMemoryError x) &#123;</span><br><span class="line">            Bits.unreserveMemory(size, cap);</span><br><span class="line">            <span class="keyword">throw</span> x;</span><br><span class="line">        &#125;</span><br><span class="line">        unsafe.setMemory(base, size, (<span class="keyword">byte</span>) <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">if</span> (pa &amp;&amp; (base % ps != <span class="number">0</span>)) &#123;</span><br><span class="line">            <span class="comment">// Round up to page boundary</span></span><br><span class="line">            address = base + ps - (base &amp; (ps - <span class="number">1</span>));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            address = base;</span><br><span class="line">        &#125;</span><br><span class="line">    	<span class="comment">//虚引用，在ByteBuffer被回收时执行直接内存的释放</span></span><br><span class="line">        cleaner = Cleaner.create(<span class="keyword">this</span>, <span class="keyword">new</span> Deallocator(base, size, cap));</span><br><span class="line">        att = <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><strong>垃圾回收只能管理Java的内存</strong>，自动进行。</p>
+</li>
+<li><p>直接内存的分配和释放是通过<strong>Unsafe对象管理</strong>，回收要主动调用freeMemory方法。</p>
+</li>
+<li><p>ByteBuffer实现类的内部，<strong>使用了Cleaner（虚引用）来监测ByteBuffer对象</strong>，一旦ByteBuffer被回收</p>
+<p>，那么就由ReferenceHandler线程通过Cleaner的clean方法调用freememory来释放内存。</p>
+</li>
+</ul>
+<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><ul>
+<li>System.GC() 是Full GC，比较占用系统时间，一般禁用。</li>
+<li>禁用显示垃圾回收的话，<strong>ButeBuffer不能释放则直接内存也不能释放。</strong></li>
+<li>此时<strong>可以手动调用unsafe的freeMemory</strong>释放直接内存。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JVM/" rel="tag"># JVM</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/12/07/Jvm%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E4%B8%80/" rel="prev" title="Jvm学习笔记一">
+      <i class="fa fa-chevron-left"></i> Jvm学习笔记一
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/12/11/Jvm%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E4%B8%89/" rel="next" title="Jvm学习笔记三">
+      Jvm学习笔记三 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#JVM内存结构"><span class="nav-number">1.</span> <span class="nav-text">JVM内存结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#程序计数器（线程私有）"><span class="nav-number">1.1.</span> <span class="nav-text">程序计数器（线程私有）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#定义"><span class="nav-number">1.1.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#作用"><span class="nav-number">1.1.2.</span> <span class="nav-text">作用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#虚拟机栈（线程私有）"><span class="nav-number">1.2.</span> <span class="nav-text">虚拟机栈（线程私有）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#栈内存溢出StackOverflowError"><span class="nav-number">1.2.1.</span> <span class="nav-text">栈内存溢出StackOverflowError</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线程运行诊断"><span class="nav-number">1.2.2.</span> <span class="nav-text">线程运行诊断</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#本地方法栈（线程私有）"><span class="nav-number">1.3.</span> <span class="nav-text">本地方法栈（线程私有）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#堆（线程共享）"><span class="nav-number">1.4.</span> <span class="nav-text">堆（线程共享）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#定义-1"><span class="nav-number">1.4.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#堆内存溢出OutOfMemoryError"><span class="nav-number">1.4.2.</span> <span class="nav-text">堆内存溢出OutOfMemoryError</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定义-2"><span class="nav-number">1.4.3.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#组成"><span class="nav-number">1.4.4.</span> <span class="nav-text">组成</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#方法区溢出"><span class="nav-number">1.4.5.</span> <span class="nav-text">方法区溢出</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#运行时常量池"><span class="nav-number">1.4.5.1.</span> <span class="nav-text">运行时常量池</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#StringTable（串池）"><span class="nav-number">1.4.6.</span> <span class="nav-text">StringTable（串池）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#介绍"><span class="nav-number">1.4.6.1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#字符串拼接操作"><span class="nav-number">1.4.6.2.</span> <span class="nav-text">字符串拼接操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#编译时优化"><span class="nav-number">1.4.6.3.</span> <span class="nav-text">编译时优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#StringTable特性总结"><span class="nav-number">1.4.6.4.</span> <span class="nav-text">StringTable特性总结</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#intern方法"><span class="nav-number">1.4.6.5.</span> <span class="nav-text">intern方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#StringTable位置"><span class="nav-number">1.4.6.6.</span> <span class="nav-text">StringTable位置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#StringTable垃圾回收"><span class="nav-number">1.4.6.7.</span> <span class="nav-text">StringTable垃圾回收</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#StringTable性能调优"><span class="nav-number">1.4.6.8.</span> <span class="nav-text">StringTable性能调优</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#示例"><span class="nav-number">1.4.7.</span> <span class="nav-text">示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#直接内存内存溢出"><span class="nav-number">1.4.8.</span> <span class="nav-text">直接内存内存溢出</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#释放原理"><span class="nav-number">1.4.9.</span> <span class="nav-text">释放原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#问题"><span class="nav-number">1.4.10.</span> <span class="nav-text">问题</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">wubaii</p>
+  <div class="site-description" itemprop="description">この世界は残酷だ…そして美しい</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">wubaii</span>
+
+  <!--
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.0.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.7.0
+  </div>
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='100,100,100' opacity='1' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

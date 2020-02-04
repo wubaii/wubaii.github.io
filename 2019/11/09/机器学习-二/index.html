@@ -1,73 +1,356 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content=""><title>机器学习(二) | Hexo</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask="" sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"><meta name="generator" content="Hexo 4.0.0"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">机器学习(二)</h1><a id="logo" href="/.">Hexo</a><p class="description"></p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">机器学习(二)</h1><div class="post-meta">Nov 9, 2019<span> | </span><span class="category"><a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a></span></div><div class="clear"><div class="toc-article" id="toc"><div class="toc-title">文章目录</div><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Example-Application"><span class="toc-number">1.</span> <span class="toc-text">Example Application</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Step-1：model（本例中为linear-model）"><span class="toc-number">1.0.1.</span> <span class="toc-text">Step 1：model（本例中为linear model）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#step2：Goodness-of-Function"><span class="toc-number">1.0.2.</span> <span class="toc-text">step2：Goodness of Function</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#step2-1：Training-data"><span class="toc-number">1.0.2.1.</span> <span class="toc-text">step2.1：Training data</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step2-2：Loss-Function"><span class="toc-number">1.0.2.2.</span> <span class="toc-text">step2.2：Loss Function</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#step3-Best-Function—Gradient-Descent（各种task均适用）"><span class="toc-number">1.0.3.</span> <span class="toc-text">step3:  Best Function—Gradient Descent（各种task均适用）</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#改进"><span class="toc-number">2.</span> <span class="toc-text">改进</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#猜测与进化前战斗值平方有关"><span class="toc-number">2.0.1.</span> <span class="toc-text">猜测与进化前战斗值平方有关</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#猜测与进化前战斗值三次方有关"><span class="toc-number">2.0.2.</span> <span class="toc-text">猜测与进化前战斗值三次方有关</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#猜测与进化前战斗值四次方有关"><span class="toc-number">2.0.3.</span> <span class="toc-text">猜测与进化前战斗值四次方有关</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#更复杂的model"><span class="toc-number">2.0.4.</span> <span class="toc-text">更复杂的model</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#过拟合"><span class="toc-number">2.0.5.</span> <span class="toc-text">过拟合</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#new-loss-function"><span class="toc-number">2.0.6.</span> <span class="toc-text">new loss function</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#选择了更多的特征"><span class="toc-number">2.0.6.1.</span> <span class="toc-text">选择了更多的特征</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#new-loss-function-–-正则化"><span class="toc-number">2.0.6.2.</span> <span class="toc-text">new loss function – 正则化</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#代码"><span class="toc-number">3.</span> <span class="toc-text">代码</span></a></li></ol></div></div><div class="post-content"><p>视频资料：B站李宏毅机器学习（2017）</p>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-pace-theme-center-atom.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="视频资料：B站李宏毅机器学习（2017） Regression">
+<meta name="keywords" content="机器学习">
+<meta property="og:type" content="article">
+<meta property="og:title" content="机器学习(二)">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;index.html">
+<meta property="og:site_name" content="三笠·阿克曼">
+<meta property="og:description" content="视频资料：B站李宏毅机器学习（2017） Regression">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;1.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;2.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;3.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;4.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;5.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;6.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;7.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;8.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;9.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;10.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;11.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;12.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;13.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;14.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;15.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;16.png">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;17.png">
+<meta property="og:updated_time" content="2019-11-11T08:44:13.219Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C&#x2F;机器学习-二&#x2F;1.png">
+
+<link rel="canonical" href="http://yoursite.com/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>机器学习(二) | 三笠·阿克曼</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+<!-- 引入看板娘,记得更改为自己的用户名和版本号 -->
+    <script src="https://cdn.jsdelivr.net/gh/wubaii/live2d-widget@1.0.4/autoload.js"></script> 
+    <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">三笠·阿克曼</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="wubaii">
+      <meta itemprop="description" content="この世界は残酷だ…そして美しい">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="三笠·阿克曼">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          机器学习(二)
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-09 09:27:33" itemprop="dateCreated datePublished" datetime="2019-11-09T09:27:33+08:00">2019-11-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-11-11 16:44:13" itemprop="dateModified" datetime="2019-11-11T16:44:13+08:00">2019-11-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index">
+                    <span itemprop="name">机器学习</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>视频资料：B站李宏毅机器学习（2017）</p>
 <p>Regression</p>
 <a id="more"></a>
 
 <h1 id="Example-Application"><a href="#Example-Application" class="headerlink" title="Example Application"></a>Example Application</h1><p><strong>Task：预测宝可梦进化后的战斗力</strong></p>
-<h3 id="Step-1：model（本例中为linear-model）"><a href="#Step-1：model（本例中为linear-model）" class="headerlink" title="Step 1：model（本例中为linear model）"></a>Step 1：model（本例中为linear model）</h3><img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/1.png">
+<h3 id="Step-1：model（本例中为linear-model）"><a href="#Step-1：model（本例中为linear-model）" class="headerlink" title="Step 1：model（本例中为linear model）"></a>Step 1：model（本例中为linear model）</h3><img src='机器学习-二/1.png'/>
 
 <p>所谓<code>Model</code>就是<code>function set</code>，本例中为<code>linear model</code></p>
 <p><code>linear model</code>一般形式可表示为$y=b+∑wi⋅xi$（$wi$ ：权重    $b$：偏置值），其中$xi$可以是任何可能对宝可梦进化后战斗值产生影响的因素，也叫作<strong>特征</strong>，如 $xh$（进化前高度），$xcp$（进化前战斗值），$xs$（种族值）…..</p>
 <p>由于$wi$ ，$b$可以取任意值， 因此可以有无数个可能的函数，但某些函数可能并不合常理，因此我们需要<code>Training data</code> 进行衡量。</p>
 <h3 id="step2：Goodness-of-Function"><a href="#step2：Goodness-of-Function" class="headerlink" title="step2：Goodness of Function"></a>step2：Goodness of Function</h3><h4 id="step2-1：Training-data"><a href="#step2-1：Training-data" class="headerlink" title="step2.1：Training data"></a><strong>step2.1：</strong>Training data</h4><p><code>Training data</code>可以理解为<strong>（进化前cp，进化后正确的cp）</strong>这种形式的数据对。</p>
-<img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/2.png">
+<img src='机器学习-二/2.png'/>
 
 
 
 <h4 id="step2-2：Loss-Function"><a href="#step2-2：Loss-Function" class="headerlink" title="step2.2：Loss Function"></a>step2.2：Loss Function</h4><p>使用<code>Loss Function</code>衡量<code>function</code>的效果好坏。</p>
 <p><strong>Input：</strong>a function</p>
 <p><strong>output：</strong>how bad it is</p>
-<img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/3.png">
+<img src='机器学习-二/3.png'/>
 
 <p>本例中只选择$xcp$特征，针对<code>linear model</code>中的一个函数，其形式可表示为$y=b+w⋅xcp$。</p>
-<img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/4.png">
+<img src='机器学习-二/4.png'/>
 
 <p>因此<code>L(f)</code>就可以转换为<code>L(w,b)</code>,针对不同的<code>w,b</code>，我们可以获得对应的<code>L(w,b)</code>，以颜色深浅表示<code>L(w,b)</code>，可以获得上图表示，我们的目标是是<code>Loss Function</code>的值最小，使用梯度下降进行求解。</p>
 <h3 id="step3-Best-Function—Gradient-Descent（各种task均适用）"><a href="#step3-Best-Function—Gradient-Descent（各种task均适用）" class="headerlink" title="step3:  Best Function—Gradient Descent（各种task均适用）"></a>step3:  Best Function—Gradient Descent（各种task均适用）</h3><p>所谓<code>Gradient Descent</code>，就是先随机选出一个点，然后根据该点出的微分值进行下一步的移动。</p>
-<img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/5.png">
+<img src='机器学习-二/5.png'/>
 
 <p>如果<strong>微分值为负</strong>，说明函数为下降趋势，进行右移，也就是增加w的值。</p>
 <p>如果<strong>微分值为正</strong>，说明函数为上升趋势，进行左移，也就是减少w的值。</p>
 <p>而每次增加/减少w具体形式见下图：</p>
-<img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/6.png">
+<img src='机器学习-二/6.png'/>
 
 
 
-<img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/7.png">
+<img src='机器学习-二/7.png'/>
 
 <p>当有两个及以上参数时，迭代过程如上图所示，与一个参数类似，只不过使用偏微分进行更新，可表示为如下形式。</p>
-<img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/8.png">
+<img src='机器学习-二/8.png'/>
 
 <p><strong>存在的问题：</strong></p>
 <p>1.从上图我们就可以看出，经过多次迭代之后，可能会停留在一个<strong>局部最优</strong>处，而不是全局最优处。</p>
 <p>2.<strong>鞍点</strong>，微分为0，但是左右两侧微分同号。</p>
-<img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/9.png">
+<img src='机器学习-二/9.png'/>
 
-<h1 id="改进"><a href="#改进" class="headerlink" title="改进"></a>改进</h1><img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/10.png">
+<h1 id="改进"><a href="#改进" class="headerlink" title="改进"></a>改进</h1><img src='机器学习-二/10.png'/>
 
 <p>利用上一节步骤得到的<code>Training Error</code>以及<code>Testing Error</code>，是否可以改进？是否与其它特征也相关？</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">注意对linear model的理解</span><br><span class="line">一般形式为：y=b+∑wi⋅xi</span><br><span class="line">这里的xi可以看做某个特征，下面几个例子分别将战斗值平方，战斗值三次方...都当做特征,所以下面几个例子也还是linear model.</span><br></pre></td></tr></table></figure>
 
 
 
-<h3 id="猜测与进化前战斗值平方有关"><a href="#猜测与进化前战斗值平方有关" class="headerlink" title="猜测与进化前战斗值平方有关"></a>猜测与进化前战斗值平方有关</h3><img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/11.png">
+<h3 id="猜测与进化前战斗值平方有关"><a href="#猜测与进化前战斗值平方有关" class="headerlink" title="猜测与进化前战斗值平方有关"></a>猜测与进化前战斗值平方有关</h3><img src='机器学习-二/11.png'/>
 
 
 
 <p><strong>相对于第一个例子有了较大改进，猜测与进化前战斗值三次方也有关。</strong></p>
-<h3 id="猜测与进化前战斗值三次方有关"><a href="#猜测与进化前战斗值三次方有关" class="headerlink" title="猜测与进化前战斗值三次方有关"></a>猜测与进化前战斗值三次方有关</h3><img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/12.png">
+<h3 id="猜测与进化前战斗值三次方有关"><a href="#猜测与进化前战斗值三次方有关" class="headerlink" title="猜测与进化前战斗值三次方有关"></a>猜测与进化前战斗值三次方有关</h3><img src='机器学习-二/12.png'/>
 
 
 
 <p><strong>很小的改进，尝试更复杂的model</strong></p>
-<h3 id="猜测与进化前战斗值四次方有关"><a href="#猜测与进化前战斗值四次方有关" class="headerlink" title="猜测与进化前战斗值四次方有关"></a>猜测与进化前战斗值四次方有关</h3><img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/13.png">
+<h3 id="猜测与进化前战斗值四次方有关"><a href="#猜测与进化前战斗值四次方有关" class="headerlink" title="猜测与进化前战斗值四次方有关"></a>猜测与进化前战斗值四次方有关</h3><img src='机器学习-二/13.png'/>
 
 
 
 <p><strong>发现在<code>Training data</code>上表现良好，但在<code>Testing data</code>上表现变差了</strong></p>
-<h3 id="更复杂的model"><a href="#更复杂的model" class="headerlink" title="更复杂的model"></a>更复杂的model</h3><img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/14.png">
+<h3 id="更复杂的model"><a href="#更复杂的model" class="headerlink" title="更复杂的model"></a>更复杂的model</h3><img src='机器学习-二/14.png'/>
 
 <p><strong>在<code>Testing data</code>上的表现越来越差</strong></p>
-<h3 id="过拟合"><a href="#过拟合" class="headerlink" title="过拟合"></a>过拟合</h3><img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/15.png">
+<h3 id="过拟合"><a href="#过拟合" class="headerlink" title="过拟合"></a>过拟合</h3><img src='机器学习-二/15.png'/>
 
 <p>总上面的数据我们可以看出，虽然越复杂的model在Testing data上有更好的表现，但是在Training data上的表现就不尽如人意。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">为什么会出现这种情况？</span><br><span class="line">这种情况被称为过拟合。</span><br><span class="line">我们的本意是在Training data中找到可以适用于所有样本的一般规律，可以在Testing data上进行较好的判别。</span><br><span class="line">然而越过于贴合Training data，就越容易将Training data中本身的一些特点当做一般规律，导致泛化性能下降。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">与过拟合相对的就是欠拟合。</span><br><span class="line">欠拟合是由于学习能力过差，只抓住了一般规律中的很小一部分。</span><br></pre></td></tr></table></figure>
@@ -76,10 +359,10 @@
 <p>1.收集更多的<code>Training data</code></p>
 <p>2.特征选择</p>
 <p>3.正则化regularization</p>
-<h3 id="new-loss-function"><a href="#new-loss-function" class="headerlink" title="new loss function"></a>new loss function</h3><h4 id="选择了更多的特征"><a href="#选择了更多的特征" class="headerlink" title="选择了更多的特征"></a>选择了更多的特征</h4><img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/16.png">
+<h3 id="new-loss-function"><a href="#new-loss-function" class="headerlink" title="new loss function"></a>new loss function</h3><h4 id="选择了更多的特征"><a href="#选择了更多的特征" class="headerlink" title="选择了更多的特征"></a>选择了更多的特征</h4><img src='机器学习-二/16.png'/>
 
 <p><strong>出现过拟合。</strong></p>
-<h4 id="new-loss-function-–-正则化"><a href="#new-loss-function-–-正则化" class="headerlink" title="new loss function – 正则化"></a>new loss function – 正则化</h4><img src="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/17.png">
+<h4 id="new-loss-function-–-正则化"><a href="#new-loss-function-–-正则化" class="headerlink" title="new loss function – 正则化"></a>new loss function – 正则化</h4><img src='机器学习-二/17.png'/>
 
 <p>这个loss function在保证Training error较小的情况下，还保证了$wi$也很小。</p>
 <p>$wi$就以为这当输入数据$xi$变化较小时，$yi$的变化也很小，也就是函数是<strong>平滑</strong>的。</p>
@@ -89,7 +372,203 @@
 <p><strong>并不是说函数越平滑就越好。</strong></p>
 <h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"></span><br><span class="line">x_data = [<span class="number">338.</span>, <span class="number">333.</span>, <span class="number">328.</span>, <span class="number">207.</span>, <span class="number">226.</span>, <span class="number">25.</span>, <span class="number">179.</span>, <span class="number">60.</span>, <span class="number">208.</span>, <span class="number">606</span>]</span><br><span class="line">y_data = [<span class="number">640.</span>, <span class="number">633.</span>, <span class="number">619.</span>, <span class="number">393.</span>, <span class="number">428.</span>, <span class="number">27.</span>, <span class="number">193.</span>, <span class="number">66.</span>, <span class="number">226.</span>, <span class="number">1591</span>]</span><br><span class="line"><span class="comment"># y_data = bias + weight*x_data</span></span><br><span class="line"></span><br><span class="line">x = np.arange(<span class="number">-200</span>, <span class="number">-100</span>, <span class="number">1</span>)  <span class="comment"># bias</span></span><br><span class="line">y = np.arange(<span class="number">-5</span>, <span class="number">5</span>, <span class="number">0.1</span>)  <span class="comment"># weight</span></span><br><span class="line">Z = np.zeros((len(x), len(y)))</span><br><span class="line">X, Y = np.meshgrid(x, y)  <span class="comment"># 生成网格坐标矩阵</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># loss function</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(len(x)):</span><br><span class="line">    <span class="keyword">for</span> j <span class="keyword">in</span> range(len(y)):</span><br><span class="line">        b = x[i]</span><br><span class="line">        w = y[j]</span><br><span class="line">        Z[j][i] = <span class="number">0</span></span><br><span class="line">        <span class="keyword">for</span> n <span class="keyword">in</span> range(len(x_data)):</span><br><span class="line">            Z[j][i] = Z[j][i] + (y_data[n] - b - w* x_data[n])**<span class="number">2</span></span><br><span class="line">        Z[j][i] = Z[j][i]/len(x_data)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># Gradient Descent</span></span><br><span class="line">b = <span class="number">-120</span></span><br><span class="line">w = <span class="number">-4</span></span><br><span class="line">lr = <span class="number">1</span></span><br><span class="line">iteration = <span class="number">100000</span></span><br><span class="line">b_history = [b]</span><br><span class="line">w_history = [w]</span><br><span class="line">lr_b = <span class="number">0</span></span><br><span class="line">lr_w = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(iteration):</span><br><span class="line">    b_grad = <span class="number">0.0</span></span><br><span class="line">    w_grad = <span class="number">0.0</span></span><br><span class="line">    <span class="keyword">for</span> n <span class="keyword">in</span> range(len(x_data)):</span><br><span class="line">        b_grad = b_grad - <span class="number">2.0</span> * (y_data[n] - b - w * x_data[n]) * <span class="number">1.0</span></span><br><span class="line">        w_grad = w_grad - <span class="number">2.0</span> * (y_data[n] - b - w * x_data[n]) * x_data[n]</span><br><span class="line">    lr_b = lr_b + b_grad ** <span class="number">2</span></span><br><span class="line">    lr_w = lr_w + w_grad ** <span class="number">2</span></span><br><span class="line"></span><br><span class="line">    b = b - lr/np.sqrt(lr_b) * b_grad</span><br><span class="line">    w = w - lr/np.sqrt(lr_w) * w_grad</span><br><span class="line"></span><br><span class="line">    b_history.append(b)</span><br><span class="line">    w_history.append(w)</span><br><span class="line"></span><br><span class="line">plt.contour(x, y, Z, <span class="number">50</span>, alpha=<span class="number">0.5</span>, cmap=plt.get_cmap(<span class="string">'jet'</span>))</span><br><span class="line">plt.plot([<span class="number">-188.4</span>], [<span class="number">2.67</span>], <span class="string">'x'</span>, ms=<span class="number">12</span>, markeredgewidth=<span class="number">3</span>, color=<span class="string">'orange'</span>)</span><br><span class="line">plt.plot(b_history, w_history, <span class="string">'o-'</span>, ms=<span class="number">3</span>, lw=<span class="number">1.5</span>, color=<span class="string">'black'</span>)</span><br><span class="line">plt.xlim(<span class="number">-200</span>, <span class="number">-100</span>)</span><br><span class="line">plt.ylim(<span class="number">-5</span>, <span class="number">5</span>)</span><br><span class="line">plt.xlabel(<span class="string">r'$b$'</span>, fontsize=<span class="number">16</span>)</span><br><span class="line">plt.ylabel(<span class="string">r'$w$'</span>, fontsize=<span class="number">16</span>)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
 
-</div><div class="tags"><a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a></div><div class="post-nav"><a class="pre" href="/2019/11/20/git%E5%91%BD%E4%BB%A4/">git命令</a><a class="next" href="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%B8%80/">机器学习(一)</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form class="search-form" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank"><input type="text" name="q" maxlength="20" placeholder="Search"/><input type="hidden" name="sitesearch" value="http://yoursite.com"/></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/git/">git</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/git/" style="font-size: 15px;">git</a> <a href="/tags/hexo%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/" style="font-size: 15px;">hexo博客搭建</a> <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" style="font-size: 15px;">机器学习</a> <a href="/tags/%E7%88%AC%E8%99%AB/" style="font-size: 15px;">爬虫</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/11/20/git%E5%91%BD%E4%BB%A4/">git命令</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/">机器学习(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%B8%80/">机器学习(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/08/%E7%88%AC%E5%8F%96%E6%96%B0%E6%B5%AA%E6%96%B0%E9%97%BB%E8%AF%84%E8%AE%BA-%E4%B8%80/">爬取新浪新闻评论(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/08/hexo%E6%90%AD%E5%BB%BA-%E4%B8%80/">hexo搭建(一)</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="http://www.github.com/wubaii" title="Github" target="_blank">Github</a><ul></ul><a href="http://www.example2.com/" title="site-name2" target="_blank">site-name2</a><ul></ul><a href="http://www.example3.com/" title="site-name3" target="_blank">site-name3</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">Hexo.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/x-mathjax-config">MathJax.Hub.Config({
-  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" rel="tag"># 机器学习</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%B8%80/" rel="prev" title="机器学习(一)">
+      <i class="fa fa-chevron-left"></i> 机器学习(一)
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/11/20/git%E5%91%BD%E4%BB%A4/" rel="next" title="git命令">
+      git命令 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
   });
-</script><script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML" async></script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Example-Application"><span class="nav-number">1.</span> <span class="nav-text">Example Application</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-1：model（本例中为linear-model）"><span class="nav-number">1.0.1.</span> <span class="nav-text">Step 1：model（本例中为linear model）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#step2：Goodness-of-Function"><span class="nav-number">1.0.2.</span> <span class="nav-text">step2：Goodness of Function</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#step2-1：Training-data"><span class="nav-number">1.0.2.1.</span> <span class="nav-text">step2.1：Training data</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#step2-2：Loss-Function"><span class="nav-number">1.0.2.2.</span> <span class="nav-text">step2.2：Loss Function</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#step3-Best-Function—Gradient-Descent（各种task均适用）"><span class="nav-number">1.0.3.</span> <span class="nav-text">step3:  Best Function—Gradient Descent（各种task均适用）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#改进"><span class="nav-number">2.</span> <span class="nav-text">改进</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#猜测与进化前战斗值平方有关"><span class="nav-number">2.0.1.</span> <span class="nav-text">猜测与进化前战斗值平方有关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#猜测与进化前战斗值三次方有关"><span class="nav-number">2.0.2.</span> <span class="nav-text">猜测与进化前战斗值三次方有关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#猜测与进化前战斗值四次方有关"><span class="nav-number">2.0.3.</span> <span class="nav-text">猜测与进化前战斗值四次方有关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更复杂的model"><span class="nav-number">2.0.4.</span> <span class="nav-text">更复杂的model</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#过拟合"><span class="nav-number">2.0.5.</span> <span class="nav-text">过拟合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#new-loss-function"><span class="nav-number">2.0.6.</span> <span class="nav-text">new loss function</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#选择了更多的特征"><span class="nav-number">2.0.6.1.</span> <span class="nav-text">选择了更多的特征</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#new-loss-function-–-正则化"><span class="nav-number">2.0.6.2.</span> <span class="nav-text">new loss function – 正则化</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#代码"><span class="nav-number">3.</span> <span class="nav-text">代码</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">wubaii</p>
+  <div class="site-description" itemprop="description">この世界は残酷だ…そして美しい</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">wubaii</span>
+
+  <!--
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.0.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.7.0
+  </div>
+-->
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='100,100,100' opacity='1' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

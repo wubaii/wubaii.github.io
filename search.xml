@@ -1,0 +1,888 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>spring01</title>
+    <url>/2020/02/04/spring01/</url>
+    <content><![CDATA[<p>Spring第一天学习笔记</p>
+<p>1.spring框架概述</p>
+<p>2.IOC如何进行解耦</p>
+<p>3.Spring中的IOC</p>
+<a id="more"></a>
+
+<p>==Bean:计算机英语中,意为可重用组件.==</p>
+<p>==JavaBean:用Java编写的可重用组件, JavaBean &gt;&gt; 实体类==,是用来创建Service和Dao对象的.</p>
+<h3 id="spring框架概述"><a href="#spring框架概述" class="headerlink" title="spring框架概述"></a>spring框架概述</h3><p><img src="overview.png" alt=""></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Spring是分层的Java SE/EE应用 full-stack轻量级开源框架，以IoC（Inverse Of Control：反转控制）和AOP（Aspect Oriented Programming：面向切面编程）为内核，提供了展现层Spring MVC和持久层Spring JDBC以及业务层事务管理等众多的企业级应用技术，还能整合开源世界众多著名的第三方框架和类库，逐渐成为使用最多的Java EE企业应用开源框架。</span><br><span class="line"></span><br><span class="line">从EJB中发展来.</span><br></pre></td></tr></table></figure>
+
+<h3 id="IOC如何解耦合"><a href="#IOC如何解耦合" class="headerlink" title="IOC如何解耦合"></a>IOC如何解耦合</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//目的:用于解耦合</span></span><br><span class="line"><span class="comment">//不使用IOC的情况,使用Service或者Dao层对象,需要进行显示new.</span></span><br><span class="line">IAccountDao accountDao=<span class="keyword">new</span> AccountDaoImpl();</span><br><span class="line">IAccountService accountService=<span class="keyword">new</span> AccountServiceImpl();</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//使用工厂模式</span></span><br><span class="line"><span class="comment">//思路:</span></span><br><span class="line"><span class="comment">//1.需要一个配置文件配置我们的Service和Dao</span></span><br><span class="line"><span class="comment">//     配置内容: 唯一标识=全限定类名(key==value)</span></span><br><span class="line"><span class="comment">//2.通过读取配置文件的内容,反射创建对象</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BeanFactory</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span>  <span class="keyword">static</span> Properties prop;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            prop=<span class="keyword">new</span> Properties();</span><br><span class="line">            InputStream in=BeanFactory.class.getClassLoader().getResourceAsStream("bean.properties");</span><br><span class="line">            prop.load(in);</span><br><span class="line">        &#125;<span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExceptionInInitializerError(<span class="string">"初始化失败"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">getBean</span><span class="params">(String beanName)</span></span>&#123;</span><br><span class="line">        Object bean=<span class="keyword">null</span>;</span><br><span class="line">        String beanPath=<span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            beanPath=prop.getProperty(beanName);</span><br><span class="line">            Class.forName(beanPath).getDeclaredMethods();</span><br><span class="line">            bean=Class.forName(beanPath).newInstance();</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> bean;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//调整为单例,定义一个容易存放beans</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BeanFactory</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Properties prop;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Map&lt;String,Object&gt; beans;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            prop=<span class="keyword">new</span> Properties();</span><br><span class="line">            InputStream in=BeanFactory.class.getClassLoader().getResourceAsStream("bean.properties");</span><br><span class="line">            prop.load(in);</span><br><span class="line">            beans=<span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">            Enumeration&lt;Object&gt; keys=prop.keys();</span><br><span class="line">            <span class="keyword">while</span>(keys.hasMoreElements())&#123;</span><br><span class="line">                String key=keys.nextElement().toString();</span><br><span class="line">                String beanPath=prop.getProperty(key);</span><br><span class="line">                beans.put(key,Class.forName(beanPath).newInstance());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;<span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExceptionInInitializerError(<span class="string">"初始化失败"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">getBean</span><span class="params">(String beanName)</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> beans.get(beanName);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Spring中的IOC"><a href="#Spring中的IOC" class="headerlink" title="Spring中的IOC"></a>Spring中的IOC</h3><p><img src="ioc.png" alt=""></p>
+<p>这种==被动接收的方式获取对象的思想==就是控制反转，它是spring框架的核心之一。<br>IOC是用来==降低程序耦合度==的.</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">commons-logging-<span class="number">1.2</span>.jar(spring-jcl-<span class="number">5.0</span><span class="number">.2</span>.RELEASE)</span><br><span class="line">spring-beans-<span class="number">5.0</span><span class="number">.2</span>.RELEASE.jar</span><br><span class="line">spring-context-<span class="number">5.0</span><span class="number">.2</span>.RELEASE.jar</span><br><span class="line">spring-core-<span class="number">5.0</span><span class="number">.2</span>.RELEASE.jar</span><br><span class="line">spring-expression-<span class="number">5.0</span><span class="number">.2</span>.RELEASE.jar</span><br><span class="line"></span><br><span class="line">注解要用的:</span><br><span class="line">spring-aop-<span class="number">5.0</span><span class="number">.2</span>.RELEASE.jar</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//用Spring来实现上面的工厂模式</span></span><br><span class="line"><span class="comment">//1.获取核心容器</span></span><br><span class="line">        ApplicationContext applicationContext=<span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">"bean.xml"</span>);</span><br><span class="line"><span class="comment">//2.根据id获取对象</span></span><br><span class="line">		applicationContext.getBean(id名);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">ApplicationContext的三个常用实现类:</span><br><span class="line">ClassPathXmlApplicationContext:它可以加载类路径下的配置文件，要求配置文件必须在类路径下。不在的话，加载不了。(更常用)</span><br><span class="line">FileSystemXmlApplicationContext:它可以加载磁盘任意路径下的配置文件(必须有访问权限）</span><br><span class="line">AnnotationConfigApplicationContext:它是用于读取注解创建容器的，是明天的内容。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">ApplicationContext和BeanFactory的区别:</span><br><span class="line">ApplicationContext:     单例对象适用              功能更丰富,一般采用此接口</span><br><span class="line">     它在构建核心容器时，创建对象采取的策略是采用立即加载的方式。也就是说，只要一读取完配置文件马上就创建配置文件中配置的对象。</span><br><span class="line"></span><br><span class="line">BeanFactory:            多例对象使用</span><br><span class="line">     它在构建核心容器时，创建对象采取的策略是采用延迟加载的方式。也就是说，什么时候根据id获取对象了，什么时候才真正的创建对象。</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!--spring对Bean的管理细节</span></span><br><span class="line"><span class="comment">1.创建Bean的三种方式</span></span><br><span class="line"><span class="comment">2.Bean的作用范围</span></span><br><span class="line"><span class="comment">3.Bean的生命周期</span></span><br><span class="line"><span class="comment">--&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="创建Bean的三种方式"><a href="#创建Bean的三种方式" class="headerlink" title="创建Bean的三种方式"></a>创建Bean的三种方式</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!--创建Bean的三种方式 --&gt;</span></span><br><span class="line">   <span class="comment">&lt;!-- 第一种方式：使用默认构造函数创建。</span></span><br><span class="line"><span class="comment">           在spring的配置文件中使用bean标签，配以id和class属性之后，且没有其他属性和标签时。</span></span><br><span class="line"><span class="comment">           采用的就是默认构造函数创建bean对象，此时如果类中没有默认构造函数，则对象无法创建。</span></span><br><span class="line"><span class="comment">--&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService"</span> <span class="attr">class</span>=<span class="string">"com.itheima.service.impl.AccountServiceImpl"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"></span><br><span class="line">   <span class="comment">&lt;!-- 第二种方式： 使用普通工厂中的方法创建对象（使用某个类中的方法创建对象，并存入spring容器）</span></span><br><span class="line"><span class="comment">--&gt;</span>    </span><br><span class="line">   <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"instanceFactory"</span> <span class="attr">class</span>=<span class="string">"com.itheima.factory.InstanceFactory"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService"</span> <span class="attr">factory-bean</span>=<span class="string">"instanceFactory"</span> <span class="attr">factory-method</span>=<span class="string">"getAccountService"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">   <span class="comment">&lt;!-- 第三种方式：使用工厂中的静态方法创建对象（使用某个类中的静态方法创建对象，并存入spring容器)</span></span><br><span class="line"><span class="comment">   --&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService"</span> <span class="attr">class</span>=<span class="string">"com.itheima.factory.StaticFactory"</span> <span class="attr">factory-method</span>=<span class="string">"getAccountService"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="Bean的作用范围"><a href="#Bean的作用范围" class="headerlink" title="Bean的作用范围"></a>Bean的作用范围</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- bean的作用范围调整</span></span><br><span class="line"><span class="comment">        bean标签的scope属性：</span></span><br><span class="line"><span class="comment">            作用：用于指定bean的作用范围</span></span><br><span class="line"><span class="comment">            取值： 常用的就是单例的和多例的</span></span><br><span class="line"><span class="comment">                singleton：单例的（默认值）</span></span><br><span class="line"><span class="comment">                prototype：多例的</span></span><br><span class="line"><span class="comment">                request：作用于web应用的请求范围</span></span><br><span class="line"><span class="comment">                session：作用于web应用的会话范围</span></span><br><span class="line"><span class="comment">                global-session：作用于集群环境的会话范围（全局会话范围），当不是集群环境时，它就是session</span></span><br><span class="line"><span class="comment">--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService"</span> <span class="attr">class</span>=<span class="string">"com.itheima.service.impl.AccountServiceImpl"</span> <span class="attr">scope</span>=<span class="string">"prototype"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="%E5%85%A8%E5%B1%80session.png" alt=""></p>
+<h4 id="Bean的生命周期"><a href="#Bean的生命周期" class="headerlink" title="Bean的生命周期"></a>Bean的生命周期</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- bean对象的生命周期</span></span><br><span class="line"><span class="comment">            单例对象</span></span><br><span class="line"><span class="comment">                出生：当容器创建时对象出生</span></span><br><span class="line"><span class="comment">                活着：只要容器还在，对象一直活着</span></span><br><span class="line"><span class="comment">                死亡：容器销毁，对象消亡</span></span><br><span class="line"><span class="comment">               *总结：单例对象的生命周期和容器相同</span></span><br><span class="line"><span class="comment">            多例对象</span></span><br><span class="line"><span class="comment">                出生：当我们使用对象时spring框架为我们创建</span></span><br><span class="line"><span class="comment">                活着：对象只要是在使用过程中就一直活着。</span></span><br><span class="line"><span class="comment">                死亡：当对象长时间不用，且没有别的对象引用时，由Java的垃圾回收器回收</span></span><br><span class="line"><span class="comment">     --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService"</span> <span class="attr">class</span>=<span class="string">"com.itheima.service.impl.AccountServiceImpl"</span></span></span><br><span class="line"><span class="tag">          <span class="attr">scope</span>=<span class="string">"prototype"</span> <span class="attr">init-method</span>=<span class="string">"init"</span> <span class="attr">destroy-method</span>=<span class="string">"destroy"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="DI"><a href="#DI" class="headerlink" title="DI"></a>DI</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- spring中的依赖注入</span></span><br><span class="line"><span class="comment">        依赖注入：</span></span><br><span class="line"><span class="comment">            Dependency Injection</span></span><br><span class="line"><span class="comment">        IOC的作用：</span></span><br><span class="line"><span class="comment">            降低程序间的耦合（依赖关系）</span></span><br><span class="line"><span class="comment">        依赖关系的管理：</span></span><br><span class="line"><span class="comment">            以后都交给spring来维护</span></span><br><span class="line"><span class="comment">        在当前类需要用到其他类的对象，由spring为我们提供，我们只需要在配置文件中说明</span></span><br><span class="line"><span class="comment">        依赖关系的维护：</span></span><br><span class="line"><span class="comment">            就称之为依赖注入。</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">         依赖注入：</span></span><br><span class="line"><span class="comment">            能注入的数据：有三类</span></span><br><span class="line"><span class="comment">                基本类型和String</span></span><br><span class="line"><span class="comment">                其他bean类型（在配置文件中或者注解配置过的bean）</span></span><br><span class="line"><span class="comment">                复杂类型/集合类型</span></span><br><span class="line"><span class="comment">             注入的方式：有三种</span></span><br><span class="line"><span class="comment">                第一种：使用构造函数提供&lt;constructor-arg&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">                第二种：使用set方法提供</span></span><br><span class="line"><span class="comment">                第三种：使用注解提供</span></span><br><span class="line"><span class="comment">     --&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!--构造函数注入：</span></span><br><span class="line"><span class="comment">        使用的标签:constructor-arg</span></span><br><span class="line"><span class="comment">        标签出现的位置：bean标签的内部</span></span><br><span class="line"><span class="comment">        标签中的属性</span></span><br><span class="line"><span class="comment">            type：用于指定要注入的数据的数据类型，该数据类型也是构造函数中某个或某些参数的类型</span></span><br><span class="line"><span class="comment">            index：用于指定要注入的数据给构造函数中指定索引位置的参数赋值。索引的位置是从0开始</span></span><br><span class="line"><span class="comment">            name：用于指定给构造函数中指定名称的参数赋值                                        常用的</span></span><br><span class="line"><span class="comment">            =============以上三个用于指定给构造函数中哪个参数赋值=================</span></span><br><span class="line"><span class="comment">            value：用于提供基本类型和String类型的数据</span></span><br><span class="line"><span class="comment">            ref：用于指定其他的bean类型数据。它指的就是在spring的Ioc核心容器中出现过的bean对象</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">        优势：</span></span><br><span class="line"><span class="comment">            在获取bean对象时，注入数据是必须的操作，否则对象无法创建成功。</span></span><br><span class="line"><span class="comment">        弊端：</span></span><br><span class="line"><span class="comment">            改变了bean对象的实例化方式，使我们在创建对象时，如果用不到这些数据，也必须提供。</span></span><br><span class="line"><span class="comment">    --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService"</span> <span class="attr">class</span>=<span class="string">"com.itheima.service.impl.AccountServiceImpl"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">constructor-arg</span> <span class="attr">name</span>=<span class="string">"name"</span> <span class="attr">value</span>=<span class="string">"泰斯特"</span>&gt;</span><span class="tag">&lt;/<span class="name">constructor-arg</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">constructor-arg</span> <span class="attr">name</span>=<span class="string">"age"</span> <span class="attr">value</span>=<span class="string">"18"</span>&gt;</span><span class="tag">&lt;/<span class="name">constructor-arg</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">constructor-arg</span> <span class="attr">name</span>=<span class="string">"birthday"</span> <span class="attr">ref</span>=<span class="string">"now"</span>&gt;</span><span class="tag">&lt;/<span class="name">constructor-arg</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">&lt;!-- 配置一个日期对象 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"now"</span> <span class="attr">class</span>=<span class="string">"java.util.Date"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- set方法注入                更常用的方式</span></span><br><span class="line"><span class="comment">        涉及的标签：property</span></span><br><span class="line"><span class="comment">        出现的位置：bean标签的内部</span></span><br><span class="line"><span class="comment">        标签的属性</span></span><br><span class="line"><span class="comment">            name：用于指定注入时所调用的set方法名称(不是属性名哦)</span></span><br><span class="line"><span class="comment">            value：用于提供基本类型和String类型的数据</span></span><br><span class="line"><span class="comment">            ref：用于指定其他的bean类型数据。它指的就是在spring的Ioc核心容器中出现过的bean对象</span></span><br><span class="line"><span class="comment">        优势：</span></span><br><span class="line"><span class="comment">            创建对象时没有明确的限制，可以直接使用默认构造函数</span></span><br><span class="line"><span class="comment">        弊端：</span></span><br><span class="line"><span class="comment">            如果有某个成员必须有值，则获取对象是有可能set方法没有执行。</span></span><br><span class="line"><span class="comment">    --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService2"</span> <span class="attr">class</span>=<span class="string">"com.itheima.service.impl.AccountServiceImpl2"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"name"</span> <span class="attr">value</span>=<span class="string">"TEST"</span> &gt;</span><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"age"</span> <span class="attr">value</span>=<span class="string">"21"</span>&gt;</span><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"birthday"</span> <span class="attr">ref</span>=<span class="string">"now"</span>&gt;</span><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 复杂类型的注入/集合类型的注入</span></span><br><span class="line"><span class="comment">        用于给List结构集合注入的标签：</span></span><br><span class="line"><span class="comment">            list array set</span></span><br><span class="line"><span class="comment">        用于个Map结构集合注入的标签:</span></span><br><span class="line"><span class="comment">            map  props</span></span><br><span class="line"><span class="comment">        结构相同，标签可以互换</span></span><br><span class="line"><span class="comment">    --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"list"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">list</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">value</span>&gt;</span><span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">value</span>&gt;</span><span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">list</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">Property</span> <span class="attr">name</span>=<span class="string">"map"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">map</span>&gt;</span></span><br><span class="line">    	<span class="tag">&lt;<span class="name">entry</span> <span class="attr">key</span>=<span class="string">""</span> <span class="attr">value</span>=<span class="string">""</span>&gt;</span><span class="tag">&lt;/<span class="name">entry</span>&gt;</span></span><br><span class="line">    	<span class="tag">&lt;<span class="name">entry</span> <span class="attr">key</span>=<span class="string">""</span> <span class="attr">value</span>=<span class="string">""</span>&gt;</span><span class="tag">&lt;/<span class="name">entry</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">map</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">Property</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>Spring</category>
+      </categories>
+      <tags>
+        <tag>框架</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hexo博客优化</title>
+    <url>/2020/02/04/Hexo%E5%8D%9A%E5%AE%A2%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<p>Hexo博客优化</p>
+<a id="more"></a>
+
+
+
+<h3 id="开启标签，分类侧边栏"><a href="#开启标签，分类侧边栏" class="headerlink" title="开启标签，分类侧边栏"></a>开启标签，分类侧边栏</h3><h4 id="设置主题配置文件-config-yml"><a href="#设置主题配置文件-config-yml" class="headerlink" title="设置主题配置文件_config.yml"></a>设置主题配置文件_config.yml</h4><figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">menu:</span></span><br><span class="line">  <span class="attr">home:</span> <span class="string">/</span> <span class="string">||</span> <span class="string">home</span></span><br><span class="line">  <span class="comment">#about: /about/ || user</span></span><br><span class="line">  <span class="attr">tags:</span> <span class="string">/tags/</span> <span class="string">||</span> <span class="string">tags</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="string">/categories/</span> <span class="string">||</span> <span class="string">th</span></span><br><span class="line">  <span class="attr">archives:</span> <span class="string">/archives/</span> <span class="string">||</span> <span class="string">archive</span></span><br><span class="line">  <span class="comment">#schedule: /schedule/ || calendar</span></span><br><span class="line">  <span class="comment">#sitemap: /sitemap.xml || sitemap</span></span><br><span class="line">  <span class="comment">#commonweal: /404/ || heartbeat</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="创建标签，分类文件夹"><a href="#创建标签，分类文件夹" class="headerlink" title="创建标签，分类文件夹"></a>创建标签，分类文件夹</h4><p>1.在根目录下使用：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">hexo new page categories</span><br><span class="line">hexo new page tags</span><br></pre></td></tr></table></figure>
+
+<p>2.分别修改index.md</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">title: 分类</span><br><span class="line">date: 2020-02-04 16:44:45</span><br><span class="line">type: categories</span><br><span class="line"></span><br><span class="line">title: tags</span><br><span class="line">date: 2020-02-04 16:55:18</span><br><span class="line">type: tags</span><br></pre></td></tr></table></figure>
+
+<h4 id="重新启动"><a href="#重新启动" class="headerlink" title="重新启动"></a>重新启动</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">hexo g</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+
+
+]]></content>
+      <tags>
+        <tag>hexo博客</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Jvm学习笔记三</title>
+    <url>/2019/12/11/Jvm%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E4%B8%89/</url>
+    <content><![CDATA[<p>JVM学习笔记</p>
+<a id="more"></a>
+
+<p>##1.如何判断对象可以回收</p>
+<h3 id="1-1引用计数法"><a href="#1-1引用计数法" class="headerlink" title="1.1引用计数法"></a>1.1引用计数法</h3><ul>
+<li><p>设置对象的应用值，引用值为0说明可回收。</p>
+</li>
+<li><p>弊端：循环引用无法回收。</p>
+<img src="Jvm学习笔记三/1.png"/>
+
+</li>
+</ul>
+<h3 id="1-2可达性分析算法（java使用）"><a href="#1-2可达性分析算法（java使用）" class="headerlink" title="1.2可达性分析算法（java使用）"></a>1.2可达性分析算法（java使用）</h3><p><strong>思想：</strong></p>
+<ul>
+<li>确定根对象（<strong>一定不能被当成垃圾回收的</strong>）。</li>
+<li>根对象直接或间接引用的对象不能被回收。</li>
+<li>其余对象可以被回收。</li>
+</ul>
+<p>扫描堆中对象，看<strong>是否能够沿着GC Root对象为起点的引用链找到该对象</strong>，如果不能，表示可以回收。</p>
+<p><strong>哪些对象为GC Root？</strong></p>
+<ul>
+<li><p>很多。</p>
+</li>
+<li><p>当前活动线程的局部变量的引用的对象可以作为GC Root。</p>
+</li>
+</ul>
+<h3 id="1-3四种引用"><a href="#1-3四种引用" class="headerlink" title="1.3四种引用"></a>1.3四种引用</h3><p>####1.3.1强引用</p>
+<ul>
+<li>正常使用的引用都是强引用。<br><strong>如创建一个对象，将其赋值给一个变量，那么就成该变量强引用了这个对象。</strong></li>
+<li>只要通过GC Root的引用链能找到该对象，那么这个对象就不能被回收。</li>
+<li>当所有GC Root到该对象的引用链都断开时，该对象才能被回收。</li>
+</ul>
+<p>####1.3.2软/弱引用</p>
+<img src="Jvm学习笔记三\2.png" alt="软弱引用"/>
+
+<p>如果对象被软引用或者弱引用，<strong>并且没有被直接的强引用</strong>，那么在垃圾回收时都有可能被回收。</p>
+<ul>
+<li><p>如果<strong>垃圾回收后内存空间还是不足</strong>，则会回收<strong>软引用</strong>所引用的对象。</p>
+</li>
+<li><p><strong>只要发生垃圾回收</strong>，都会回收<strong>弱引用</strong>所引用的对象。</p>
+</li>
+<li><p>软弱引用本身也是对象，在其引用的对象被回收后，本身可以配合引用队列释放自身空间。</p>
+</li>
+</ul>
+<h4 id="1-3-3虚引用"><a href="#1-3-3虚引用" class="headerlink" title="1.3.3虚引用"></a>1.3.3虚引用</h4><ul>
+<li>常配合直接内存使用，<strong>必须使用引用队列。</strong></li>
+</ul>
+<img src="Jvm学习笔记三\3.png"/>
+
+<p><strong>典型用法：</strong></p>
+<ol>
+<li>当虚引用对象引用的ByteBuffer没有被强引用时，会在垃圾回收时被回收。</li>
+<li>ByteBuffer被回收后，对应的虚引用对象就会进入引用队列。</li>
+<li>ReferenceHandler线程会定期查询引用队列，如果不为空则调用<code>Unsafe.freeMemory</code>释放直接内存。</li>
+</ol>
+<h4 id="1-3-4终结器引用"><a href="#1-3-4终结器引用" class="headerlink" title="1.3.4终结器引用"></a>1.3.4终结器引用</h4><ul>
+<li>必须使用引用队列</li>
+<li>类重写了finalize方法时使用。</li>
+</ul>
+<p><strong>用法</strong>：</p>
+<ol>
+<li>当重写了finalize方法的对象没用被强引用时，虚拟机会为其创建啊一个终结器引用对象。</li>
+<li>在该对象<strong>要被</strong>回收时，终结器引用对象会被放入引用队列。</li>
+<li>FinalizeHandler线程定期查询引用队列，如果不为空则调用该对象的finalize方法。</li>
+<li><strong>下一次垃圾回收时回收该对象</strong>。</li>
+</ol>
+<h4 id="1-3-5引用队列"><a href="#1-3-5引用队列" class="headerlink" title="1.3.5引用队列"></a>1.3.5引用队列</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">List&lt;SoftReference&lt;<span class="keyword">byte</span>[]&gt;&gt; list=<span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"><span class="comment">//软引用队列</span></span><br><span class="line">ReferenceQueue&lt;<span class="keyword">byte</span>[]&gt; queue=<span class="keyword">new</span> ReferenceQueue&lt;&gt;();</span><br><span class="line"><span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">5</span>;i++)&#123;</span><br><span class="line">	<span class="comment">//关联软引用队列，当软引用队列所关联的byte[]被回收时，软引用自己会加到软引用队列中。</span></span><br><span class="line">    SoftReference&lt;<span class="keyword">byte</span>[]&gt; ref=<span class="keyword">new</span> SoftReference&lt;&gt;(<span class="keyword">new</span> <span class="keyword">byte</span>[_4MB],queue);</span><br><span class="line">	list.add(ref);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//从队列中取出没用引用对象的软引用</span></span><br><span class="line">Reference&lt;? extends <span class="keyword">byte</span>[]&gt; poll = queue.poll();</span><br><span class="line"><span class="keyword">while</span>(poll!=<span class="keyword">null</span>)&#123;</span><br><span class="line">	list.remove(poll);</span><br><span class="line">	poll=queue.poll();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="2-垃圾回收算法（都会使用）"><a href="#2-垃圾回收算法（都会使用）" class="headerlink" title="2.垃圾回收算法（都会使用）"></a>2.垃圾回收算法（都会使用）</h2><h3 id="2-1标记清除"><a href="#2-1标记清除" class="headerlink" title="2.1标记清除"></a>2.1标记清除</h3><img src="Jvm学习笔记三\4.png"/>
+
+<ul>
+<li>过程<ol>
+<li><strong>标记</strong>：扫描堆中对象，利用可达性分析算法对可回收对象进行标记。</li>
+<li><strong>回收：</strong>”释放“空间（其实只是记录地址及大小，下次使用时覆盖</li>
+</ol>
+</li>
+<li>优点：速度快。</li>
+<li>缺点：产生内存碎片。</li>
+</ul>
+<h3 id="2-2标记整理"><a href="#2-2标记整理" class="headerlink" title="2.2标记整理"></a>2.2标记整理</h3><img src="Jvm学习笔记三\5.png"  />
+
+<ul>
+<li>过程<ol>
+<li><strong>标记</strong>：扫描堆中对象，利用可达性分析算法对可回收对象进行标记。</li>
+<li><strong>整理：</strong>回收垃圾对象，将非垃圾对象向前移动。</li>
+</ol>
+</li>
+<li>优点：无内存碎片。</li>
+<li>缺点：效率低。</li>
+</ul>
+<h3 id="2-3复制"><a href="#2-3复制" class="headerlink" title="2.3复制"></a>2.3复制</h3><img src="Jvm学习笔记三\6.png"/>
+
+<ul>
+<li>过程（维持From和To两块内存区域）<ol>
+<li><strong>标记</strong>：扫描堆中对象，利用可达性分析算法对可回收对象进行标记。</li>
+<li><strong>复制：</strong>将From内存区域的非垃圾对象复制到To内存区域，回收From区域中垃圾对象，交换From和To内存区域。</li>
+</ol>
+</li>
+<li>优点：无内存碎片。</li>
+<li>缺点：需要双倍内存空间。</li>
+</ul>
+<h2 id="3-分代垃圾回收"><a href="#3-分代垃圾回收" class="headerlink" title="3.分代垃圾回收"></a>3.分代垃圾回收</h2><h3 id="3-1过程"><a href="#3-1过程" class="headerlink" title="3.1过程"></a>3.1过程</h3><img src="Jvm学习笔记三\7.png"/>
+
+<p>Jvm综合使用上述三种垃圾回收算法。</p>
+<ul>
+<li><p>问：为什么Jvm要对内存进行分区？</p>
+<p>答：针对不同生命周期的对象执行不同的垃圾回收策略。</p>
+<p>​        <strong>新生代</strong>：用完就丢的对象，垃圾回收频率高。</p>
+<p>​        <strong>老年代</strong>：长时间使用的对象，垃圾回收频率低。</p>
+</li>
+</ul>
+<img src="Jvm学习笔记三\8.png"/>
+
+<img src="Jvm学习笔记三\9.png"/>
+
+<img src="Jvm学习笔记三\10.png"/>
+
+<img src="Jvm学习笔记三\11.png"/>
+
+<img src="Jvm学习笔记三\12.png"/>
+
+<img src="Jvm学习笔记三\13.png"/>
+
+<ul>
+<li>Minor GC会引发Stop the world！！！即暂停其他用户线程，垃圾回收完恢复运行。（因为要复制对象）</li>
+<li>对象超过阈值，会晋升到老年代，最大寿命是15（对象头中4bit位表示寿命，但不一定就是15，有可能小）</li>
+<li>Full GC同样会引发Stop the world！！！并且时间更长。</li>
+<li>如果Full GC后老年代空间仍不足，则引发OutOfMemoryError。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Minor GC触发条件------eden满了。</span><br><span class="line">Full GC触发条件------晋升到老年代的对象大于老年代可用内存。</span><br><span class="line">              ------调用System.GC会建议JVM进行。</span><br><span class="line">              ------元空间（MetaSpace）满。</span><br><span class="line">晋升老年代条件------幸存区From中对象寿命达到一个阈值或者幸存区To空间不足</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">* 将幸存区From和伊甸园中幸存对象复制到幸存区To中（如果TO区放不下直接放入老年代），回收无用对象并交换幸存区From和幸存区To。</span><br><span class="line">*分配大对象会直接放入老年代中。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Minor GC指垃圾回收范围为新生代。</span><br><span class="line">Full Gc指垃圾回收范围为新生代+老年代。</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2相关VM参数"><a href="#3-2相关VM参数" class="headerlink" title="3.2相关VM参数"></a>3.2相关VM参数</h3><img src="Jvm学习笔记三\14.png"  />
+
+<img src="Jvm学习笔记三\15.png"  />
+
+<h3 id="3-3案例分析"><a href="#3-3案例分析" class="headerlink" title="3.3案例分析"></a>3.3案例分析</h3><h4 id="3-3-1初始堆"><a href="#3-3-1初始堆" class="headerlink" title="3.3.1初始堆"></a>3.3.1初始堆</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//-Xmx20m -Xms20m -Xmn10m -XX:+UseSerialGC -XX:+PrintGCDetails -verbose:gc</span></span><br><span class="line"><span class="comment">//新生代中各区比例默认为8:1:1</span></span><br><span class="line"></span><br><span class="line">Heap</span><br><span class="line"><span class="comment">//新生代大小（不包含To区）</span></span><br><span class="line"> def <span class="keyword">new</span> generation   total <span class="number">9216</span>K, used <span class="number">2368</span>K [<span class="number">0x00000000fec00000</span>, <span class="number">0x00000000ff600000</span>, <span class="number">0x00000000ff600000</span>)                                    </span><br><span class="line">  eden space <span class="number">8192</span>K,  <span class="number">28</span>% used [<span class="number">0x00000000fec00000</span>, <span class="number">0x00000000fee500a8</span>, <span class="number">0x00000000ff400000</span>)</span><br><span class="line">  from space <span class="number">1024</span>K,   <span class="number">0</span>% used [<span class="number">0x00000000ff400000</span>, <span class="number">0x00000000ff400000</span>, <span class="number">0x00000000ff500000</span>)</span><br><span class="line">  to   space <span class="number">1024</span>K,   <span class="number">0</span>% used [<span class="number">0x00000000ff500000</span>, <span class="number">0x00000000ff500000</span>, <span class="number">0x00000000ff600000</span>)</span><br><span class="line">                               </span><br><span class="line"><span class="comment">//永久代大小                               </span></span><br><span class="line"> tenured generation   total <span class="number">10240</span>K, used <span class="number">0</span>K [<span class="number">0x00000000ff600000</span>, <span class="number">0x0000000100000000</span>, <span class="number">0x0000000100000000</span>)</span><br><span class="line">   the space <span class="number">10240</span>K,   <span class="number">0</span>% used [<span class="number">0x00000000ff600000</span>, <span class="number">0x00000000ff600000</span>, <span class="number">0x00000000ff600200</span>, <span class="number">0x0000000100000000</span>)</span><br><span class="line">                                </span><br><span class="line"><span class="comment">//元空间大小，虽然不属于堆，但逻辑上是堆的一部分                                </span></span><br><span class="line"> Metaspace       used <span class="number">3147</span>K, capacity <span class="number">4496</span>K, committed <span class="number">4864</span>K, reserved <span class="number">1056768</span>K</span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">space</span>    <span class="title">used</span> 351<span class="title">K</span>, <span class="title">capacity</span> 388<span class="title">K</span>, <span class="title">committed</span> 512<span class="title">K</span>, <span class="title">reserved</span> 1048576<span class="title">K</span></span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-3-2分配7MB"><a href="#3-3-2分配7MB" class="headerlink" title="3.3.2分配7MB"></a>3.3.2分配7MB</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">[GC (Allocation Failure) [DefNew: <span class="number">2383</span>K-&gt;<span class="number">855</span>K(<span class="number">9216</span>K), <span class="number">0.0253149</span> secs] <span class="number">2383</span>K-&gt;<span class="number">855</span>K(<span class="number">19456</span>K), <span class="number">0.0571365</span> secs] [Times: user=<span class="number">0.00</span> sys=<span class="number">0.00</span>, real=<span class="number">0.06</span> secs] </span><br><span class="line">Heap</span><br><span class="line"><span class="comment">//从新生代中分配7M空间</span></span><br><span class="line"> def <span class="keyword">new</span> generation   total <span class="number">9216</span>K, used <span class="number">8596</span>K [<span class="number">0x00000000fec00000</span>, <span class="number">0x00000000ff600000</span>, <span class="number">0x00000000ff600000</span>)</span><br><span class="line">  eden space <span class="number">8192</span>K,  <span class="number">94</span>% used [<span class="number">0x00000000fec00000</span>, <span class="number">0x00000000ff38f7a0</span>, <span class="number">0x00000000ff400000</span>)</span><br><span class="line"><span class="comment">//垃圾回收后存活的对象都在From中                               </span></span><br><span class="line">  from space <span class="number">1024</span>K,  <span class="number">83</span>% used [<span class="number">0x00000000ff500000</span>, <span class="number">0x00000000ff5d5c00</span>, <span class="number">0x00000000ff600000</span>)</span><br><span class="line">  to   space <span class="number">1024</span>K,   <span class="number">0</span>% used [<span class="number">0x00000000ff400000</span>, <span class="number">0x00000000ff400000</span>, <span class="number">0x00000000ff500000</span>)</span><br><span class="line">                               </span><br><span class="line"><span class="comment">//老年代为空                               </span></span><br><span class="line"> tenured generation   total <span class="number">10240</span>K, used <span class="number">0</span>K [<span class="number">0x00000000ff600000</span>, <span class="number">0x0000000100000000</span>, <span class="number">0x0000000100000000</span>)</span><br><span class="line">   the space <span class="number">10240</span>K,   <span class="number">0</span>% used [<span class="number">0x00000000ff600000</span>, <span class="number">0x00000000ff600000</span>, <span class="number">0x00000000ff600200</span>, <span class="number">0x0000000100000000</span>)</span><br><span class="line"> Metaspace       used <span class="number">3250</span>K, capacity <span class="number">4496</span>K, committed <span class="number">4864</span>K, reserved <span class="number">1056768</span>K</span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">space</span>    <span class="title">used</span> 359<span class="title">K</span>, <span class="title">capacity</span> 388<span class="title">K</span>, <span class="title">committed</span> 512<span class="title">K</span>, <span class="title">reserved</span> 1048576<span class="title">K</span></span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-3-3分配512KB-512KB"><a href="#3-3-3分配512KB-512KB" class="headerlink" title="3.3.3分配512KB+512KB"></a>3.3.3分配512KB+512KB</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">[GC (Allocation Failure) [DefNew: <span class="number">2156</span>K-&gt;<span class="number">845</span>K(<span class="number">9216</span>K), <span class="number">0.0026748</span> secs] <span class="number">2156</span>K-&gt;<span class="number">845</span>K(<span class="number">19456</span>K), <span class="number">0.0027394</span> secs] [Times: user=<span class="number">0.00</span> sys=<span class="number">0.02</span>, real=<span class="number">0.00</span> secs] </span><br><span class="line"><span class="comment">//第二次分配512KB失败</span></span><br><span class="line">[GC (Allocation Failure) [DefNew: <span class="number">9016</span>K-&gt;<span class="number">519</span>K(<span class="number">9216</span>K), <span class="number">0.0092468</span> secs] <span class="number">9016</span>K-&gt;<span class="number">8480</span>K(<span class="number">19456</span>K), <span class="number">0.0092864</span> secs] [Times: user=<span class="number">0.00</span> sys=<span class="number">0.02</span>, real=<span class="number">0.01</span> secs] </span><br><span class="line">Heap</span><br><span class="line"> def <span class="keyword">new</span> generation   total <span class="number">9216</span>K, used <span class="number">1196</span>K [<span class="number">0x00000000fec00000</span>, <span class="number">0x00000000ff600000</span>, <span class="number">0x00000000ff600000</span>)</span><br><span class="line">  eden space <span class="number">8192</span>K,   <span class="number">8</span>% used [<span class="number">0x00000000fec00000</span>, <span class="number">0x00000000feca94d8</span>, <span class="number">0x00000000ff400000</span>)</span><br><span class="line"> <span class="comment">//第二次分配的512KB放入From中（有疑问）                             </span></span><br><span class="line">  from space <span class="number">1024</span>K,  <span class="number">50</span>% used [<span class="number">0x00000000ff400000</span>, <span class="number">0x00000000ff481d98</span>, <span class="number">0x00000000ff500000</span>)</span><br><span class="line">  to   space <span class="number">1024</span>K,   <span class="number">0</span>% used [<span class="number">0x00000000ff500000</span>, <span class="number">0x00000000ff500000</span>, <span class="number">0x00000000ff600000</span>)</span><br><span class="line"> <span class="comment">//7MB和第一次的512KB都放入老年代</span></span><br><span class="line"> tenured generation   total <span class="number">10240</span>K, used <span class="number">7961</span>K [<span class="number">0x00000000ff600000</span>, <span class="number">0x0000000100000000</span>, <span class="number">0x0000000100000000</span>)</span><br><span class="line">   the space <span class="number">10240</span>K,  <span class="number">77</span>% used [<span class="number">0x00000000ff600000</span>, <span class="number">0x00000000ffdc6460</span>, <span class="number">0x00000000ffdc6600</span>, <span class="number">0x0000000100000000</span>)</span><br><span class="line"> Metaspace       used <span class="number">3201</span>K, capacity <span class="number">4496</span>K, committed <span class="number">4864</span>K, reserved <span class="number">1056768</span>K</span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">space</span>    <span class="title">used</span> 353<span class="title">K</span>, <span class="title">capacity</span> 388<span class="title">K</span>, <span class="title">committed</span> 512<span class="title">K</span>, <span class="title">reserved</span> 1048576<span class="title">K</span></span></span><br></pre></td></tr></table></figure>
+
+<p>每次Minor GC后伊甸园都会变空，如果幸存区To内存不足以放下原来伊甸园和幸存区From中幸存对象，那么这些对象会直接放入老年代中。</p>
+<h4 id="3-3-4大对象（直接分配8MB）"><a href="#3-3-4大对象（直接分配8MB）" class="headerlink" title="3.3.4大对象（直接分配8MB）"></a>3.3.4大对象（直接分配8MB）</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//如果对象达到新生代放不下，而老年代空间足够，则会将该对象直接放入老年代中。</span></span><br><span class="line">Heap</span><br><span class="line"> def <span class="keyword">new</span> generation   total <span class="number">9216</span>K, used <span class="number">2547</span>K [<span class="number">0x00000000fec00000</span>, <span class="number">0x00000000ff600000</span>, <span class="number">0x00000000ff600000</span>)</span><br><span class="line">  eden space <span class="number">8192</span>K,  <span class="number">31</span>% used [<span class="number">0x00000000fec00000</span>, <span class="number">0x00000000fee7ce80</span>, <span class="number">0x00000000ff400000</span>)</span><br><span class="line">  from space <span class="number">1024</span>K,   <span class="number">0</span>% used [<span class="number">0x00000000ff400000</span>, <span class="number">0x00000000ff400000</span>, <span class="number">0x00000000ff500000</span>)</span><br><span class="line">  to   space <span class="number">1024</span>K,   <span class="number">0</span>% used [<span class="number">0x00000000ff500000</span>, <span class="number">0x00000000ff500000</span>, <span class="number">0x00000000ff600000</span>)</span><br><span class="line"> tenured generation   total <span class="number">10240</span>K, used <span class="number">8192</span>K [<span class="number">0x00000000ff600000</span>, <span class="number">0x0000000100000000</span>, <span class="number">0x0000000100000000</span>)</span><br><span class="line"> <span class="comment">//直接放入老年代中</span></span><br><span class="line">   the space <span class="number">10240</span>K,  <span class="number">80</span>% used [<span class="number">0x00000000ff600000</span>, <span class="number">0x00000000ffe00010</span>, <span class="number">0x00000000ffe00200</span>, <span class="number">0x0000000100000000</span>)</span><br><span class="line"> Metaspace       used <span class="number">3251</span>K, capacity <span class="number">4496</span>K, committed <span class="number">4864</span>K, reserved <span class="number">1056768</span>K</span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">space</span>    <span class="title">used</span> 360<span class="title">K</span>, <span class="title">capacity</span> 388<span class="title">K</span>, <span class="title">committed</span> 512<span class="title">K</span>, <span class="title">reserved</span> 1048576<span class="title">K</span></span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//如果再放一个8M对象，则会内存溢出。</span></span><br><span class="line">如果内存溢出并不是发生在主线程中，那么并不会影响主线程正常结束。</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-垃圾回收器"><a href="#4-垃圾回收器" class="headerlink" title="4.垃圾回收器"></a>4.垃圾回收器</h2><img src="Jvm学习笔记三\19.png"/>
+
+<h3 id="4-1串行"><a href="#4-1串行" class="headerlink" title="4.1串行"></a>4.1串行</h3><ul>
+<li><strong>单线程</strong></li>
+<li>适合堆内存空间较小，cpu核数较少</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">-XX:+UseSerialGC=Serial+SerialOld  <span class="comment">//都是单线程</span></span><br><span class="line">Serial:新生代，复制算法</span><br><span class="line">SerialOld:老年代，标记整理算法</span><br><span class="line"></span><br><span class="line"><span class="comment">//对象地址可能变化，所以阻塞其他线程</span></span><br></pre></td></tr></table></figure>
+
+<img src="Jvm学习笔记三\16.png"/>
+
+
+
+
+
+<h3 id="4-2吞吐量优先"><a href="#4-2吞吐量优先" class="headerlink" title="4.2吞吐量优先"></a>4.2吞吐量优先</h3><ul>
+<li>多线程</li>
+<li>适合堆内存较大，多核cpu</li>
+<li>单位时间内，STW的时间最短0.2 0.2</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">吞吐量理解为单位时间内程序运行时间的占比比较容易理解。</span><br><span class="line">而不是单位时间内执行的任务数。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">-XX:+UseParallelGC ~ -XX:+UseParallelOldGC</span><br><span class="line">Parallel:新生代，复制算法</span><br><span class="line">ParallelOld:老年代，标记整理算法</span><br><span class="line"></span><br><span class="line">-XX:UseAdaptiveSizePolicy</span><br><span class="line">-XX:GCTimeRatio=ratio              ------1/1+ratio</span><br><span class="line">-XX:MaxGCPauseMillis=ms            </span><br><span class="line">-XX:ParallelGCThreads=n</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-3响应时间优先"><a href="#4-3响应时间优先" class="headerlink" title="4.3响应时间优先"></a>4.3响应时间优先</h3><ul>
+<li>多线程</li>
+<li>适合堆内存较大，多核cpu</li>
+<li>尽可能让STW的单次时间最短 0.1 0.1 0.1 0.1 0.1</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-XX:+UseConcMarkSweepGC(标记清除) ~ -XX:+UseParNewGC(复制) ~ SerialOld(出现并发失败的情况使用)</span><br><span class="line">-XX:ParallelGCThreads=n ~ -XX:ConcGCThreads=threads</span><br><span class="line">-XX:CMSInitiatingOccupancyFraction=percent</span><br><span class="line">//清理过程可能产生新的垃圾，因此在达到指定百分比的内存占用时就要进行清理。</span><br><span class="line">-XX:+CMSScavengeBeforeRemark</span><br><span class="line">//在重新标记前先对新生代进行垃圾清理。</span><br><span class="line"></span><br><span class="line">UseParNewGC：UseSerialGC的多线程版本，能和CMS一起使用</span><br><span class="line">UseParallelGC：只能和UseParallelOldGC或SerialOld搭配使用。</span><br><span class="line"></span><br><span class="line">初始标记：标记GC ROOT</span><br><span class="line">并发标记：标记GC ROOT引用对象</span><br></pre></td></tr></table></figure>
+
+<img src="Jvm学习笔记三\17.png"/>
+
+<h3 id="4-4-G1"><a href="#4-4-G1" class="headerlink" title="4.4 G1"></a>4.4 G1</h3><p>定义：Garbage First</p>
+<ul>
+<li>2004 论文发布</li>
+<li>2009 JDK 6u14 体验</li>
+<li>2012 JDK 7u4 官方支持</li>
+<li>2017 <strong>JDK 9 默认</strong></li>
+</ul>
+<p>适用场景：</p>
+<ul>
+<li>同时注重吞吐量（Throughput）和低延迟（Low latency），默认的暂停目标是 200 ms</li>
+<li>超大堆内存，会将堆划分为多个大小相等的 Region</li>
+<li>整体上是标记+整理算法，<strong>两个区域之间是复制算法</strong></li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">相关JVM参数：</span><br><span class="line">-XX:+UseG1GC(JDK1.8及以前)</span><br><span class="line">-XX:G1HeapRegionSize=size</span><br><span class="line">-XX:MaxGCPauseMillis=time</span><br></pre></td></tr></table></figure>
+
+<h4 id="1）G1-垃圾回收阶段"><a href="#1）G1-垃圾回收阶段" class="headerlink" title="1）G1 垃圾回收阶段"></a>1）G1 垃圾回收阶段</h4><img src="Jvm学习笔记三\18.png"/>
+
+<h4 id="2）Young-Collection（STW）"><a href="#2）Young-Collection（STW）" class="headerlink" title="2）Young Collection（STW）"></a>2）Young Collection（STW）</h4><img src="Jvm学习笔记三\20.png"/>
+
+
+
+<img src="Jvm学习笔记三\21.png"/>
+
+<img src="Jvm学习笔记三\22.png"/>
+
+<h4 id="3）Young-Collection-CM"><a href="#3）Young-Collection-CM" class="headerlink" title="3）Young Collection + CM"></a>3）Young Collection + CM</h4><ul>
+<li>在 Young GC 时会进行 GC Root 的初始标记</li>
+<li>老年代占用堆空间比例达到阈值时，进行并发标记（不会 STW），由下面的 JVM 参数决定</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-xxx:InitiatingHeapOccupancyPercent=percent(默认45%)</span><br></pre></td></tr></table></figure>
+
+<img src="Jvm学习笔记三\23.png"/>
+
+<h4 id="4）Mixed-Collection"><a href="#4）Mixed-Collection" class="headerlink" title="4）Mixed Collection"></a>4）Mixed Collection</h4><p>会对 E、S、O 进行全面垃圾回收</p>
+<ul>
+<li><p>最终标记（Remark）会 STW</p>
+</li>
+<li><p>拷贝存活（Evacuation）会 STW</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-XX:MaxGCPauseMillis=ms</span><br><span class="line">为了满足这个目标，可能只对垃圾占比大老年代区域进行回收，因此称为Garbage First。</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<img src="Jvm学习笔记三\24.png"/>
+
+
+
+<h4 id="5）Full-GC"><a href="#5）Full-GC" class="headerlink" title="5）Full GC"></a>5）Full GC</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SerialGC</span><br><span class="line">- 新生代内存不足发生的垃圾收集 - minor gc</span><br><span class="line">- 老年代内存不足发生的垃圾收集 - full gc</span><br><span class="line"></span><br><span class="line">ParallelGC</span><br><span class="line">- 新生代内存不足发生的垃圾收集 - minor gc</span><br><span class="line">- 老年代内存不足发生的垃圾收集 - full gc</span><br><span class="line"></span><br><span class="line">CMS</span><br><span class="line">- 新生代内存不足发生的垃圾收集 - minor gc</span><br><span class="line">- 老年代内存不足</span><br><span class="line"></span><br><span class="line">G1</span><br><span class="line">- 新生代内存不足发生的垃圾收集 - minor gc</span><br><span class="line">- 老年代内存不足</span><br><span class="line"></span><br><span class="line">如果并发标记速度大于产生垃圾速度，就不算是Full GC，GC日志中不会出现Full GC。</span><br></pre></td></tr></table></figure>
+
+<h4 id="6）Young-Collection跨代引用"><a href="#6）Young-Collection跨代引用" class="headerlink" title="6）Young Collection跨代引用"></a>6）Young Collection跨代引用</h4><p>快、</p>
+]]></content>
+      <categories>
+        <category>JVM</category>
+      </categories>
+      <tags>
+        <tag>JVM</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Jvm学习笔记二</title>
+    <url>/2019/12/07/Jvm%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E4%BA%8C/</url>
+    <content><![CDATA[<p>JVM学习笔记</p>
+<a id="more"></a>
+
+<h1 id="JVM内存结构"><a href="#JVM内存结构" class="headerlink" title="JVM内存结构"></a>JVM内存结构</h1><h2 id="程序计数器（线程私有）"><a href="#程序计数器（线程私有）" class="headerlink" title="程序计数器（线程私有）"></a>程序计数器（线程私有）</h2><h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>Program Count register 程序计数器（寄存器）</p>
+<ul>
+<li>就是记住<strong>下一条字节码指令的地址。</strong></li>
+</ul>
+<p>特点：</p>
+<ul>
+<li>是<strong>线程私有</strong>的</li>
+<li><strong>不存在内存溢出</strong></li>
+</ul>
+<h3 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h3><p><strong>字节码文件的执行流程：</strong></p>
+<p>拿到一条字节码指令，交给JVM中的解释器，解释器将其翻译成机器指令交给CPU执行。</p>
+<h2 id="虚拟机栈（线程私有）"><a href="#虚拟机栈（线程私有）" class="headerlink" title="虚拟机栈（线程私有）"></a>虚拟机栈（线程私有）</h2><p>###定义</p>
+<p>JAVA Virtual Machine stacks（java虚拟机栈）</p>
+<ul>
+<li>每个线程都有自己独立的虚拟机栈，作为栈的运行时空间。</li>
+<li>线程调用方法时，为方法分配栈帧，作为方法的运行时空间。</li>
+<li>每调用一个方法，就把栈帧压入虚拟机栈。</li>
+<li>同一时间只有一个活动栈帧，对应正在执行的方法。</li>
+<li>无垃圾回收机制，方法执行完弹出栈帧。</li>
+</ul>
+<p><strong>问题：方法内的局部变量是否是线程安全的？</strong></p>
+<ul>
+<li><p>如果方法内的局部变量没有逃离方法的作用范围，则是线程安全的。</p>
+</li>
+<li><p>如果局部变量引用了对象，并逃离了方法的作用范围，则不是线程安全的。</p>
+<p><strong>如将局部变量return</strong></p>
+</li>
+</ul>
+<h3 id="栈内存溢出StackOverflowError"><a href="#栈内存溢出StackOverflowError" class="headerlink" title="栈内存溢出StackOverflowError"></a>栈内存溢出StackOverflowError</h3><ol>
+<li><strong>栈帧过多导致栈内存溢出</strong><ul>
+<li>递归调用</li>
+<li>第三方类库，如Json转换，对象关联导致递归调用</li>
+</ul>
+</li>
+<li>栈帧过大导致栈内存溢出</li>
+</ol>
+<h3 id="线程运行诊断"><a href="#线程运行诊断" class="headerlink" title="线程运行诊断"></a>线程运行诊断</h3><ol>
+<li><p>CPU占用过高（Linux）</p>
+<ul>
+<li><p>用Top指令查看哪个进程对CPU的占用过高</p>
+</li>
+<li><p>用ps H -eo pid,tid,%CPU |grep 进程Id （用ps进一步定位哪个线程引起的CPU占用过高）</p>
+</li>
+<li><p>jstack 进程id</p>
+<ul>
+<li>可以根据线程id找到有问题的线程</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<ol start="2">
+<li>程序长时间运行没有结果—–<strong>死锁</strong><ul>
+<li>jstack 进程id<ul>
+<li>查看出问题的线程</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="本地方法栈（线程私有）"><a href="#本地方法栈（线程私有）" class="headerlink" title="本地方法栈（线程私有）"></a>本地方法栈（线程私有）</h2><p>本地方法执行时的内存空间。</p>
+<h2 id="堆（线程共享）"><a href="#堆（线程共享）" class="headerlink" title="堆（线程共享）"></a>堆（线程共享）</h2><h3 id="定义-1"><a href="#定义-1" class="headerlink" title="定义"></a>定义</h3><p><strong>new 创建的对象全都放在堆中</strong></p>
+<p>特点：</p>
+<ol>
+<li>线程共享，因此堆中对象要考虑共享问题</li>
+<li>有垃圾回收机制—<strong>对象不再被引用时进行回收</strong></li>
+</ol>
+<h3 id="堆内存溢出OutOfMemoryError"><a href="#堆内存溢出OutOfMemoryError" class="headerlink" title="堆内存溢出OutOfMemoryError"></a>堆内存溢出OutOfMemoryError</h3><p>诊断工具：</p>
+<ol>
+<li><p>jps</p>
+<ul>
+<li>查看当前系统中有哪些java进程</li>
+</ul>
+</li>
+<li><p>jmap</p>
+<ul>
+<li>查看堆内存占用情况   jmap -heap 进程id</li>
+</ul>
+</li>
+<li><p>jconsole工具</p>
+</li>
+<li><p>jvisualvm—&gt;堆转储(dump)</p>
+</li>
+</ol>
+<p>##方法区（线程共享）</p>
+<h3 id="定义-2"><a href="#定义-2" class="headerlink" title="定义"></a>定义</h3><ul>
+<li>方法区是所有线程共享的</li>
+<li>存储与<strong>每个类相关的信息、运行时常量池和类加载器</strong>。</li>
+<li>虚拟机启动时被创建，逻辑上是堆的一部分（但可以有很多种实现）。</li>
+</ul>
+<h3 id="组成"><a href="#组成" class="headerlink" title="组成"></a>组成</h3><img src='JVM学习笔记二\1.png'/>
+
+<h3 id="方法区溢出"><a href="#方法区溢出" class="headerlink" title="方法区溢出"></a>方法区溢出</h3><ul>
+<li><p>1.8以前会导致永久代溢出</p>
+<ul>
+<li><pre><code>JDK1.6          java.lang.OutOfMemoryError:   PermGen  Space
+-XX:MaxPermSize=8m
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">* 1.8以后会导致元空间溢出</span><br><span class="line"></span><br><span class="line">  *</span><br></pre></td></tr></table></figure>
+JDK1.8          java.lang.OutOfMemoryError:   Metaspace
+-XX:MaxMetaspaceSize=8m
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">* 场景---**运行时动态生成字节码，动态加载类**</span><br><span class="line">  * Spring</span><br><span class="line">  * Mybatis</span><br><span class="line"></span><br><span class="line">### 运行时常量池</span><br><span class="line"></span><br><span class="line">####常量池</span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">二进制字节码文件组成：类的基本信息，常量池，类方法定义（包含虚拟机指令）</span><br><span class="line"></span><br><span class="line">//类的基本信息</span><br><span class="line">Last modified 2019-12-9; size 540 bytes</span><br><span class="line">  MD5 checksum b9541a15e5cb58ff22210bdd4ccd8dd5</span><br><span class="line">  Compiled from &quot;Test01.java&quot;</span><br><span class="line">public class com.test.Test01</span><br><span class="line">  minor version: 0</span><br><span class="line">  major version: 52</span><br><span class="line">  flags: ACC_PUBLIC, ACC_SUPER</span><br><span class="line">//常量池</span><br><span class="line">Constant pool:</span><br><span class="line">   #1 = Methodref          #6.#20         // java/lang/Object.&quot;&lt;init&gt;&quot;:()V</span><br><span class="line">   #2 = Fieldref           #21.#22        // java/lang/System.out:Ljava/io/PrintStream;</span><br><span class="line">   #3 = String             #23            // Hello World!</span><br><span class="line">   #4 = Methodref          #24.#25        // java/io/PrintStream.println:(Ljava/lang/String;)V</span><br><span class="line">   #5 = Class              #26            // com/test/Test01</span><br><span class="line">   #6 = Class              #27            // java/lang/Object</span><br><span class="line">   #7 = Utf8               &lt;init&gt;</span><br><span class="line">   #8 = Utf8               ()V</span><br><span class="line">   #9 = Utf8               Code</span><br><span class="line">  #10 = Utf8               LineNumberTable</span><br><span class="line">  #11 = Utf8               LocalVariableTable</span><br><span class="line">  #12 = Utf8               this</span><br><span class="line">  #13 = Utf8               Lcom/test/Test01;</span><br><span class="line">  #14 = Utf8               main</span><br><span class="line">  #15 = Utf8               ([Ljava/lang/String;)V</span><br><span class="line">  #16 = Utf8               args</span><br><span class="line">  #17 = Utf8               [Ljava/lang/String;</span><br><span class="line">  #18 = Utf8               SourceFile</span><br><span class="line">  #19 = Utf8               Test01.java</span><br><span class="line">  #20 = NameAndType        #7:#8          // &quot;&lt;init&gt;&quot;:()V</span><br><span class="line">  #21 = Class              #28            // java/lang/System</span><br><span class="line">  #22 = NameAndType        #29:#30        // out:Ljava/io/PrintStream;</span><br><span class="line">  #23 = Utf8               Hello World!</span><br><span class="line">  #24 = Class              #31            // java/io/PrintStream</span><br><span class="line">  #25 = NameAndType        #32:#33        // println:(Ljava/lang/String;)V</span><br><span class="line">  #26 = Utf8               com/test/Test01</span><br><span class="line">  #27 = Utf8               java/lang/Object</span><br><span class="line">  #28 = Utf8               java/lang/System</span><br><span class="line">  #29 = Utf8               out</span><br><span class="line">  #30 = Utf8               Ljava/io/PrintStream;</span><br><span class="line">  #31 = Utf8               java/io/PrintStream</span><br><span class="line">  #32 = Utf8               println</span><br><span class="line">  #33 = Utf8               (Ljava/lang/String;)V</span><br><span class="line">//类方法定义</span><br><span class="line">&#123;</span><br><span class="line">  public com.test.Test01();</span><br><span class="line">    descriptor: ()V</span><br><span class="line">    flags: ACC_PUBLIC</span><br><span class="line">    Code:</span><br><span class="line">      stack=1, locals=1, args_size=1</span><br><span class="line">         0: aload_0</span><br><span class="line">         1: invokespecial #1                  // Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V</span><br><span class="line">         4: return</span><br><span class="line">      LineNumberTable:</span><br><span class="line">        line 3: 0</span><br><span class="line">      LocalVariableTable:</span><br><span class="line">        Start  Length  Slot  Name   Signature</span><br><span class="line">            0       5     0  this   Lcom/test/Test01;</span><br><span class="line"></span><br><span class="line">  public static void main(java.lang.String[]);</span><br><span class="line">    descriptor: ([Ljava/lang/String;)V</span><br><span class="line">    flags: ACC_PUBLIC, ACC_STATIC</span><br><span class="line">    Code:</span><br><span class="line">      stack=2, locals=1, args_size=1</span><br><span class="line">         0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;</span><br><span class="line">         3: ldc           #3                  // String Hello World!</span><br><span class="line">         5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V</span><br><span class="line">         8: return</span><br><span class="line">      LineNumberTable:</span><br><span class="line">        line 5: 0</span><br><span class="line">        line 6: 8</span><br><span class="line">      LocalVariableTable:</span><br><span class="line">        Start  Length  Slot  Name   Signature</span><br><span class="line">            0       9     0  args   [Ljava/lang/String;</span><br><span class="line">&#125;</span><br><span class="line">SourceFile: &quot;Test01.java&quot;</span><br></pre></td></tr></table></figure>
+</code></pre></li>
+</ul>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//常量池的作用就是给虚拟机指令提供常量符号。</span></span><br><span class="line">0: getstatic     #2                  </span><br><span class="line">3: ldc           #3                  </span><br><span class="line">5: invokevirtual #4                  (Ljava/lang/String;)V</span><br><span class="line"><span class="number">8</span>: <span class="keyword">return</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="运行时常量池"><a href="#运行时常量池" class="headerlink" title="运行时常量池"></a>运行时常量池</h4><ul>
+<li>常量池就是一张表, 虚拟机指令根据这张常量表找到要执行的<strong>类名、方法名、参数信息、字面量</strong>等。</li>
+<li><strong>常量池是在*.calss文件，</strong>意思就是二进制字节码文件。</li>
+<li>在运行时，<strong>常量池中的信息就会放入运行时常量池，并把里面的符号地址变为真实地址。</strong></li>
+</ul>
+<h3 id="StringTable（串池）"><a href="#StringTable（串池）" class="headerlink" title="StringTable（串池）"></a>StringTable（串池）</h3><h4 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h4><figure class="highlight"><table><tr><td class="code"><pre><span class="line">String s1=<span class="string">"a"</span>;</span><br><span class="line">String s2=<span class="string">"b"</span>;</span><br><span class="line">String s3=<span class="string">"ab"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">0: ldc           #2                  // String a</span><br><span class="line"><span class="number">2</span>: astore_1</span><br><span class="line">3: ldc           #3                  // String b</span><br><span class="line"><span class="number">5</span>: astore_2</span><br><span class="line">6: ldc           #4                  // String ab</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>常量池中的符号，在运行时都会被加载到运行时常量池中，这是a、b、ab都只是运行时常量池中的符号，<strong>还没有变为字符串对象（延迟加载）。</strong></p>
+</li>
+<li><p><strong>只有在执行到引用该符号的代码上，才会将其变为字符串对象</strong>，先在串池中查找：</p>
+<ul>
+<li>若串池中没有，则创建并将其放入串池</li>
+<li>若串池中存在，则使用串池中的。</li>
+</ul>
+</li>
+<li><p>StringTable（串池）：HashTable结构，不能扩容。</p>
+</li>
+</ul>
+<h4 id="字符串拼接操作"><a href="#字符串拼接操作" class="headerlink" title="字符串拼接操作"></a>字符串拼接操作</h4><figure class="highlight"><table><tr><td class="code"><pre><span class="line">String s4=s1+s2;  </span><br><span class="line">---<span class="keyword">new</span> StringBuilder().append(<span class="string">"a"</span>).append(<span class="string">"b"</span>).toString();</span><br><span class="line">---toString()===<span class="keyword">new</span> String();</span><br><span class="line"></span><br><span class="line">         9: new           #5                  // class java/lang/StringBuilder</span><br><span class="line">        <span class="number">12</span>: dup</span><br><span class="line">        13: invokespecial #6                  // Method java/lang/StringBuilder."&lt;init&gt;":</span><br><span class="line">        <span class="number">16</span>: aload_1</span><br><span class="line">        17: invokevirtual #7                  // Method java/lang/StringBuilder.append:</span><br><span class="line">        <span class="number">20</span>: aload_2</span><br><span class="line">        21: invokevirtual #7                  // Method java/lang/StringBuilder.append:</span><br><span class="line">        24: invokevirtual #8                  // Method java/lang/StringBuilder.toString:</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>String s3=&quot;ab&quot;;</code>这个字符串对象是放在串池中的</li>
+<li><code>String s4=s1+s2;</code>根据上面的分析可以看出，这是新创建了一个字符串对象，放在堆中。</li>
+<li>因此<code>s3==s4</code>的结果为<code>false</code></li>
+</ul>
+<h4 id="编译时优化"><a href="#编译时优化" class="headerlink" title="编译时优化"></a>编译时优化</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">String s5=<span class="string">"a"</span>+<span class="string">"b"</span>;  <span class="comment">//直接到常量池中找到“ab”</span></span><br><span class="line">        </span><br><span class="line">        29: ldc           #4                  // String ab</span><br><span class="line">        <span class="number">31</span>: astore        <span class="number">5</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>针对字符串常量拼接，结果在编译时已确定，javac在编译时期可以进行优化。</li>
+<li>而对于变量则不能进行优化。</li>
+</ul>
+<h4 id="StringTable特性总结"><a href="#StringTable特性总结" class="headerlink" title="StringTable特性总结"></a>StringTable特性总结</h4><ul>
+<li><strong>常量池中的字符串仅是符号</strong>，第一次使用时才变为对象，并且放入串池。</li>
+<li>串池可以避免重复创建字符串。</li>
+<li>字符串变量的拼接原理是<code>StringBuilder</code></li>
+<li>字符串常量的拼接原理是编译时优化</li>
+<li><strong><code>intern</code>方法可以主动将不在串池中的字符串对象放入串池。</strong><ul>
+<li><strong>1.8</strong>尝试将字符串对象放入串池，如果串池中有则不会放入，如果没有就放入串池。会把串池中的对象放回。（如果串池原先没有，返回的就是自己）。</li>
+<li><strong>1.6</strong>尝试将字符串对象放入串池，如果串池中有则不会放入，如果<strong>没有会把此对象复制一份放入串池</strong>。然后把串池中的对象返回。</li>
+</ul>
+</li>
+</ul>
+<h4 id="intern方法"><a href="#intern方法" class="headerlink" title="intern方法"></a>intern方法</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">String s=<span class="keyword">new</span> String(<span class="string">"a"</span>)+<span class="keyword">new</span> String(<span class="string">"b"</span>);  <span class="comment">//s="ab"</span></span><br><span class="line"></span><br><span class="line">s.intern();  <span class="comment">//尝试将字符串对象放入串池，如果串池中有则不会放入，如果没有就放入串池。</span></span><br><span class="line">			 <span class="comment">//无论串池中有没有，都会返回串池中对象(没有就还是自己)。</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>a</code>和<code>b</code>不仅在串池中有，在堆中也有</li>
+<li>而<code>ab</code>只在堆中有</li>
+<li><strong>两个字符串变量拼接后的字符串对象只存在于堆中。</strong></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">String x=<span class="string">"ab"</span></span><br><span class="line">String s=<span class="keyword">new</span> String(<span class="string">"a"</span>)+<span class="keyword">new</span> String(<span class="string">"b"</span>);  <span class="comment">//s="ab"</span></span><br><span class="line">String s2=s.intern();</span><br><span class="line">s==x  <span class="comment">//false</span></span><br><span class="line">s2==x <span class="comment">//true</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="StringTable位置"><a href="#StringTable位置" class="headerlink" title="StringTable位置"></a>StringTable位置</h4><ul>
+<li><p>1.6用的是永久代，StringTable位于运行时常量池中。</p>
+</li>
+<li><p>1.8用的是堆空间，StringTable位于堆空间中。</p>
+</li>
+<li><p><strong>垃圾回收机制不同。</strong></p>
+<ul>
+<li>1.6 永久代 Full GC</li>
+<li>1,8 堆 Mini GC</li>
+</ul>
+</li>
+</ul>
+<h4 id="StringTable垃圾回收"><a href="#StringTable垃圾回收" class="headerlink" title="StringTable垃圾回收"></a>StringTable垃圾回收</h4><h4 id="StringTable性能调优"><a href="#StringTable性能调优" class="headerlink" title="StringTable性能调优"></a>StringTable性能调优</h4><ul>
+<li><p>StringTable<strong>本质是个哈希表</strong></p>
+</li>
+<li><p>如果字符串常量比较多，可以将StringTable的桶的个数适量增多。<code>-XX:StringTableSize=200000</code></p>
+</li>
+<li><p>如果有大量重复字符串，使用intern()将字符串入池后可以大大减少重复字符串对象。</p>
+</li>
+</ul>
+<p>##直接内存（操作系统内存）</p>
+<p>###特点</p>
+<ul>
+<li><strong>不属于虚拟机内存</strong>。</li>
+<li>常见于nio操作，用于数据缓冲区。</li>
+<li>分配回收成本高，但读写性能高。</li>
+<li>不受JVM内存回收管理。</li>
+</ul>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><p>不使用直接内存的文件读写：</p>
+<img src="Jvm学习笔记二/2.png"/>
+
+<p>使用直接内存的文件读写：</p>
+<img src="Jvm学习笔记二/3.png"/>
+
+<h3 id="直接内存内存溢出"><a href="#直接内存内存溢出" class="headerlink" title="直接内存内存溢出"></a>直接内存内存溢出</h3><p>Java.lang.OutOfMemoryError: Direct buffer memory</p>
+<h3 id="释放原理"><a href="#释放原理" class="headerlink" title="释放原理"></a>释放原理</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ByteBuffer <span class="title">allocateDirect</span><span class="params">(<span class="keyword">int</span> capacity)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> DirectByteBuffer(capacity);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">DirectByteBuffer(<span class="keyword">int</span> cap) &#123;                   <span class="comment">// package-private</span></span><br><span class="line">        <span class="keyword">super</span>(-<span class="number">1</span>, <span class="number">0</span>, cap, cap);</span><br><span class="line">        <span class="keyword">boolean</span> pa = VM.isDirectMemoryPageAligned();</span><br><span class="line">        <span class="keyword">int</span> ps = Bits.pageSize();</span><br><span class="line">        <span class="keyword">long</span> size = Math.max(<span class="number">1L</span>, (<span class="keyword">long</span>)cap + (pa ? ps : <span class="number">0</span>));</span><br><span class="line">        Bits.reserveMemory(size, cap);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">long</span> base = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">//直接内存的分配</span></span><br><span class="line">            base = unsafe.allocateMemory(size);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (OutOfMemoryError x) &#123;</span><br><span class="line">            Bits.unreserveMemory(size, cap);</span><br><span class="line">            <span class="keyword">throw</span> x;</span><br><span class="line">        &#125;</span><br><span class="line">        unsafe.setMemory(base, size, (<span class="keyword">byte</span>) <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">if</span> (pa &amp;&amp; (base % ps != <span class="number">0</span>)) &#123;</span><br><span class="line">            <span class="comment">// Round up to page boundary</span></span><br><span class="line">            address = base + ps - (base &amp; (ps - <span class="number">1</span>));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            address = base;</span><br><span class="line">        &#125;</span><br><span class="line">    	<span class="comment">//虚引用，在ByteBuffer被回收时执行直接内存的释放</span></span><br><span class="line">        cleaner = Cleaner.create(<span class="keyword">this</span>, <span class="keyword">new</span> Deallocator(base, size, cap));</span><br><span class="line">        att = <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><strong>垃圾回收只能管理Java的内存</strong>，自动进行。</p>
+</li>
+<li><p>直接内存的分配和释放是通过<strong>Unsafe对象管理</strong>，回收要主动调用freeMemory方法。</p>
+</li>
+<li><p>ByteBuffer实现类的内部，<strong>使用了Cleaner（虚引用）来监测ByteBuffer对象</strong>，一旦ByteBuffer被回收</p>
+<p>，那么就由ReferenceHandler线程通过Cleaner的clean方法调用freememory来释放内存。</p>
+</li>
+</ul>
+<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><ul>
+<li>System.GC() 是Full GC，比较占用系统时间，一般禁用。</li>
+<li>禁用显示垃圾回收的话，<strong>ButeBuffer不能释放则直接内存也不能释放。</strong></li>
+<li>此时<strong>可以手动调用unsafe的freeMemory</strong>释放直接内存。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>JVM</category>
+      </categories>
+      <tags>
+        <tag>JVM</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Jvm学习笔记一</title>
+    <url>/2019/12/07/Jvm%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E4%B8%80/</url>
+    <content><![CDATA[<p>JVM学习笔记</p>
+<a id="more"></a>
+
+<h1 id="JVM介绍"><a href="#JVM介绍" class="headerlink" title="JVM介绍"></a>JVM介绍</h1><h2 id="什么是JVM"><a href="#什么是JVM" class="headerlink" title="什么是JVM"></a>什么是JVM</h2><ul>
+<li>定义：java virtual machine–java程序的运行环境（字节码文件的运行环境）</li>
+<li>JVM好处：</li>
+</ul>
+<ol>
+<li>一次编译，到处运行（<strong>JVM实现</strong>）        </li>
+<li>自动内存管理—<strong>垃圾回收机制</strong></li>
+<li>数组下标越界检查</li>
+<li>多态</li>
+</ol>
+<ul>
+<li>jdk、jre、jvm比较</li>
+</ul>
+<h2 id="Hotspot"><a href="#Hotspot" class="headerlink" title="Hotspot"></a>Hotspot</h2><p>本笔记以oracle的Hotspot为例。</p>
+<h2 id="学习路线"><a href="#学习路线" class="headerlink" title="学习路线"></a>学习路线</h2><img src= 'Jvm学习笔记一\1.png'/>
+
+<p><b>JVM主要学习内容：</b></p>
+<ol>
+<li><p>类加载器–将二进制字节码文件加载到JVM中运行</p>
+</li>
+<li><p>JVM内存结构</p>
+<ul>
+<li>类是放在方法区中</li>
+<li>创建的对象放在堆中</li>
+<li>对象调用方法要用到虚拟机栈，本地方法栈，程序计数器</li>
+</ul>
+</li>
+<li><p>执行引擎</p>
+<ul>
+<li>每行代码由解释器逐行解释执行</li>
+<li>JIT进行热点代码的优化执行</li>
+<li>GC对堆中不在被引用的对象进行回收</li>
+</ul>
+</li>
+<li><p>本地方法接口调用操作系统功能</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>JVM</category>
+      </categories>
+      <tags>
+        <tag>JVM</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>git命令</title>
+    <url>/2019/11/20/git%E5%91%BD%E4%BB%A4/</url>
+    <content><![CDATA[<p>参考链接：<a href="https://blog.csdn.net/youzhouliu/article/details/78952453" target="_blank" rel="noopener">https://blog.csdn.net/youzhouliu/article/details/78952453</a></p>
+<a id="more"></a>
+
+<h2 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h2><h3 id="创建版本库"><a href="#创建版本库" class="headerlink" title="创建版本库"></a>创建版本库</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#是针对拷贝下的文件库创建版本库，不是在远端创建了一个仓库</span><br><span class="line"></span><br><span class="line">git init #在一个文件夹下创建版本库</span><br><span class="line">git clone url [文件名] #将指定仓库克隆到文件夹下，文件夹不存在会创建</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="把文件提交到仓库"><a href="#把文件提交到仓库" class="headerlink" title="把文件提交到仓库"></a>把文件提交到仓库</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1.   git add #将文件夹下的文件添加到版本库</span><br><span class="line">2.   git commit -m “提交注释”           #将文件提交到仓库</span><br></pre></td></tr></table></figure>
+
+<h3 id="文件修改"><a href="#文件修改" class="headerlink" title="文件修改"></a>文件修改</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git status #查看是否还有修改后的文件未提交</span><br><span class="line"></span><br><span class="line">git diff 文件名 #查看修改内容</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="版本回退"><a href="#版本回退" class="headerlink" title="版本回退"></a>版本回退</h3><h4 id="查看版本"><a href="#查看版本" class="headerlink" title="查看版本"></a>查看版本</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git log #查看提交记录，显示提交时的message及版本号，回退后就看不到</span><br><span class="line"></span><br><span class="line">git log –-pretty=oneline #精简显示，有head的就是当前版本</span><br><span class="line"></span><br><span class="line">git reflog #看到所有操作日志</span><br><span class="line"></span><br><span class="line">可以利用git reflog查看所有的版本号，使用git reset --hard 版本号退回指定版本</span><br></pre></td></tr></table></figure>
+
+<h4 id="向后退"><a href="#向后退" class="headerlink" title="向后退"></a>向后退</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git reset --hard HEAD^ # 回滚到指定版本，上⼀个版本就是HEAD^，上上⼀个版本就是HEAD^^</span><br></pre></td></tr></table></figure>
+
+<h4 id="到任意版本"><a href="#到任意版本" class="headerlink" title="到任意版本"></a>到任意版本</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git reflog #获得所有版本号</span><br><span class="line">git reset --hard 版本号  #到任意版本</span><br></pre></td></tr></table></figure>
+
+<h3 id="工作区和版本库"><a href="#工作区和版本库" class="headerlink" title="工作区和版本库"></a>工作区和版本库</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">在本机上看到的文件就是工作区</span><br><span class="line">.git就是版本库，版本库下面有个暂存区</span><br><span class="line"></span><br><span class="line">git add 文件   #把文件添加到暂存区</span><br><span class="line">git commit -m message #把文件提交到版本库</span><br></pre></td></tr></table></figure>
+
+<h3 id="撤销修改"><a href="#撤销修改" class="headerlink" title="撤销修改"></a>撤销修改</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">在暂存区的文件</span><br><span class="line">git checkout  --  文件   #丢弃对工作区的修改</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">如果放入暂存区后再修改，会返回到放入暂存区时的内容</span><br></pre></td></tr></table></figure>
+
+<h3 id="恢复文件"><a href="#恢复文件" class="headerlink" title="恢复文件"></a>恢复文件</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">文件删除后还没被commit，可以恢复</span><br><span class="line">git checkout  --  文件</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="关联远程仓库"><a href="#关联远程仓库" class="headerlink" title="关联远程仓库"></a>关联远程仓库</h2><h3 id="创建SSH-Key"><a href="#创建SSH-Key" class="headerlink" title="创建SSH Key"></a>创建SSH Key</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git config --global user.name &quot;github用户名&quot;</span><br><span class="line">git config --global user.enmail &quot;github邮箱&quot;</span><br><span class="line"></span><br><span class="line">ssh-keygen  -t rsa –C “邮箱”</span><br></pre></td></tr></table></figure>
+
+<h3 id="添加SSH-Key"><a href="#添加SSH-Key" class="headerlink" title="添加SSH Key"></a>添加SSH Key</h3><p>在Github -&gt; settings -&gt;SSH And GPG Key 添加SSH Key</p>
+<h3 id="关联远程库"><a href="#关联远程库" class="headerlink" title="关联远程库"></a>关联远程库</h3><h4 id="创建远程库"><a href="#创建远程库" class="headerlink" title="创建远程库"></a>创建远程库</h4><h4 id="推送本地仓库"><a href="#推送本地仓库" class="headerlink" title="推送本地仓库"></a>推送本地仓库</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git remote add origin https://github.com/wubaii/gitDemo.git</span><br><span class="line">git push -u origin master</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#以后再进行提交，只需使用：</span><br><span class="line">git push origin master</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>git</category>
+      </categories>
+      <tags>
+        <tag>git</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>机器学习(二)</title>
+    <url>/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%BA%8C/</url>
+    <content><![CDATA[<p>视频资料：B站李宏毅机器学习（2017）</p>
+<p>Regression</p>
+<a id="more"></a>
+
+<h1 id="Example-Application"><a href="#Example-Application" class="headerlink" title="Example Application"></a>Example Application</h1><p><strong>Task：预测宝可梦进化后的战斗力</strong></p>
+<h3 id="Step-1：model（本例中为linear-model）"><a href="#Step-1：model（本例中为linear-model）" class="headerlink" title="Step 1：model（本例中为linear model）"></a>Step 1：model（本例中为linear model）</h3><img src='机器学习-二/1.png'/>
+
+<p>所谓<code>Model</code>就是<code>function set</code>，本例中为<code>linear model</code></p>
+<p><code>linear model</code>一般形式可表示为$y=b+∑wi⋅xi$（$wi$ ：权重    $b$：偏置值），其中$xi$可以是任何可能对宝可梦进化后战斗值产生影响的因素，也叫作<strong>特征</strong>，如 $xh$（进化前高度），$xcp$（进化前战斗值），$xs$（种族值）…..</p>
+<p>由于$wi$ ，$b$可以取任意值， 因此可以有无数个可能的函数，但某些函数可能并不合常理，因此我们需要<code>Training data</code> 进行衡量。</p>
+<h3 id="step2：Goodness-of-Function"><a href="#step2：Goodness-of-Function" class="headerlink" title="step2：Goodness of Function"></a>step2：Goodness of Function</h3><h4 id="step2-1：Training-data"><a href="#step2-1：Training-data" class="headerlink" title="step2.1：Training data"></a><strong>step2.1：</strong>Training data</h4><p><code>Training data</code>可以理解为<strong>（进化前cp，进化后正确的cp）</strong>这种形式的数据对。</p>
+<img src='机器学习-二/2.png'/>
+
+
+
+<h4 id="step2-2：Loss-Function"><a href="#step2-2：Loss-Function" class="headerlink" title="step2.2：Loss Function"></a>step2.2：Loss Function</h4><p>使用<code>Loss Function</code>衡量<code>function</code>的效果好坏。</p>
+<p><strong>Input：</strong>a function</p>
+<p><strong>output：</strong>how bad it is</p>
+<img src='机器学习-二/3.png'/>
+
+<p>本例中只选择$xcp$特征，针对<code>linear model</code>中的一个函数，其形式可表示为$y=b+w⋅xcp$。</p>
+<img src='机器学习-二/4.png'/>
+
+<p>因此<code>L(f)</code>就可以转换为<code>L(w,b)</code>,针对不同的<code>w,b</code>，我们可以获得对应的<code>L(w,b)</code>，以颜色深浅表示<code>L(w,b)</code>，可以获得上图表示，我们的目标是是<code>Loss Function</code>的值最小，使用梯度下降进行求解。</p>
+<h3 id="step3-Best-Function—Gradient-Descent（各种task均适用）"><a href="#step3-Best-Function—Gradient-Descent（各种task均适用）" class="headerlink" title="step3:  Best Function—Gradient Descent（各种task均适用）"></a>step3:  Best Function—Gradient Descent（各种task均适用）</h3><p>所谓<code>Gradient Descent</code>，就是先随机选出一个点，然后根据该点出的微分值进行下一步的移动。</p>
+<img src='机器学习-二/5.png'/>
+
+<p>如果<strong>微分值为负</strong>，说明函数为下降趋势，进行右移，也就是增加w的值。</p>
+<p>如果<strong>微分值为正</strong>，说明函数为上升趋势，进行左移，也就是减少w的值。</p>
+<p>而每次增加/减少w具体形式见下图：</p>
+<img src='机器学习-二/6.png'/>
+
+
+
+<img src='机器学习-二/7.png'/>
+
+<p>当有两个及以上参数时，迭代过程如上图所示，与一个参数类似，只不过使用偏微分进行更新，可表示为如下形式。</p>
+<img src='机器学习-二/8.png'/>
+
+<p><strong>存在的问题：</strong></p>
+<p>1.从上图我们就可以看出，经过多次迭代之后，可能会停留在一个<strong>局部最优</strong>处，而不是全局最优处。</p>
+<p>2.<strong>鞍点</strong>，微分为0，但是左右两侧微分同号。</p>
+<img src='机器学习-二/9.png'/>
+
+<h1 id="改进"><a href="#改进" class="headerlink" title="改进"></a>改进</h1><img src='机器学习-二/10.png'/>
+
+<p>利用上一节步骤得到的<code>Training Error</code>以及<code>Testing Error</code>，是否可以改进？是否与其它特征也相关？</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">注意对linear model的理解</span><br><span class="line">一般形式为：y=b+∑wi⋅xi</span><br><span class="line">这里的xi可以看做某个特征，下面几个例子分别将战斗值平方，战斗值三次方...都当做特征,所以下面几个例子也还是linear model.</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="猜测与进化前战斗值平方有关"><a href="#猜测与进化前战斗值平方有关" class="headerlink" title="猜测与进化前战斗值平方有关"></a>猜测与进化前战斗值平方有关</h3><img src='机器学习-二/11.png'/>
+
+
+
+<p><strong>相对于第一个例子有了较大改进，猜测与进化前战斗值三次方也有关。</strong></p>
+<h3 id="猜测与进化前战斗值三次方有关"><a href="#猜测与进化前战斗值三次方有关" class="headerlink" title="猜测与进化前战斗值三次方有关"></a>猜测与进化前战斗值三次方有关</h3><img src='机器学习-二/12.png'/>
+
+
+
+<p><strong>很小的改进，尝试更复杂的model</strong></p>
+<h3 id="猜测与进化前战斗值四次方有关"><a href="#猜测与进化前战斗值四次方有关" class="headerlink" title="猜测与进化前战斗值四次方有关"></a>猜测与进化前战斗值四次方有关</h3><img src='机器学习-二/13.png'/>
+
+
+
+<p><strong>发现在<code>Training data</code>上表现良好，但在<code>Testing data</code>上表现变差了</strong></p>
+<h3 id="更复杂的model"><a href="#更复杂的model" class="headerlink" title="更复杂的model"></a>更复杂的model</h3><img src='机器学习-二/14.png'/>
+
+<p><strong>在<code>Testing data</code>上的表现越来越差</strong></p>
+<h3 id="过拟合"><a href="#过拟合" class="headerlink" title="过拟合"></a>过拟合</h3><img src='机器学习-二/15.png'/>
+
+<p>总上面的数据我们可以看出，虽然越复杂的model在Testing data上有更好的表现，但是在Training data上的表现就不尽如人意。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">为什么会出现这种情况？</span><br><span class="line">这种情况被称为过拟合。</span><br><span class="line">我们的本意是在Training data中找到可以适用于所有样本的一般规律，可以在Testing data上进行较好的判别。</span><br><span class="line">然而越过于贴合Training data，就越容易将Training data中本身的一些特点当做一般规律，导致泛化性能下降。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">与过拟合相对的就是欠拟合。</span><br><span class="line">欠拟合是由于学习能力过差，只抓住了一般规律中的很小一部分。</span><br></pre></td></tr></table></figure>
+
+<p><strong>解决过拟合的方法：</strong></p>
+<p>1.收集更多的<code>Training data</code></p>
+<p>2.特征选择</p>
+<p>3.正则化regularization</p>
+<h3 id="new-loss-function"><a href="#new-loss-function" class="headerlink" title="new loss function"></a>new loss function</h3><h4 id="选择了更多的特征"><a href="#选择了更多的特征" class="headerlink" title="选择了更多的特征"></a>选择了更多的特征</h4><img src='机器学习-二/16.png'/>
+
+<p><strong>出现过拟合。</strong></p>
+<h4 id="new-loss-function-–-正则化"><a href="#new-loss-function-–-正则化" class="headerlink" title="new loss function – 正则化"></a>new loss function – 正则化</h4><img src='机器学习-二/17.png'/>
+
+<p>这个loss function在保证Training error较小的情况下，还保证了$wi$也很小。</p>
+<p>$wi$就以为这当输入数据$xi$变化较小时，$yi$的变化也很小，也就是函数是<strong>平滑</strong>的。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">为什么这么做？</span><br><span class="line">在多数情况下，平滑的函数比较有可能是正确的函数，也就是剔除抖动很厉害的函数。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">为什么不考虑bias？</span><br><span class="line">bias只是让函数上下移动，和平滑无关</span><br></pre></td></tr></table></figure>
+
+<p><strong>λ设置的大一些，$wi$所占比重就越大，找到的function就会越smooth，但是考虑Training error就更少一点。</strong></p>
+<p><strong>并不是说函数越平滑就越好。</strong></p>
+<h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"></span><br><span class="line">x_data = [<span class="number">338.</span>, <span class="number">333.</span>, <span class="number">328.</span>, <span class="number">207.</span>, <span class="number">226.</span>, <span class="number">25.</span>, <span class="number">179.</span>, <span class="number">60.</span>, <span class="number">208.</span>, <span class="number">606</span>]</span><br><span class="line">y_data = [<span class="number">640.</span>, <span class="number">633.</span>, <span class="number">619.</span>, <span class="number">393.</span>, <span class="number">428.</span>, <span class="number">27.</span>, <span class="number">193.</span>, <span class="number">66.</span>, <span class="number">226.</span>, <span class="number">1591</span>]</span><br><span class="line"><span class="comment"># y_data = bias + weight*x_data</span></span><br><span class="line"></span><br><span class="line">x = np.arange(<span class="number">-200</span>, <span class="number">-100</span>, <span class="number">1</span>)  <span class="comment"># bias</span></span><br><span class="line">y = np.arange(<span class="number">-5</span>, <span class="number">5</span>, <span class="number">0.1</span>)  <span class="comment"># weight</span></span><br><span class="line">Z = np.zeros((len(x), len(y)))</span><br><span class="line">X, Y = np.meshgrid(x, y)  <span class="comment"># 生成网格坐标矩阵</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># loss function</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(len(x)):</span><br><span class="line">    <span class="keyword">for</span> j <span class="keyword">in</span> range(len(y)):</span><br><span class="line">        b = x[i]</span><br><span class="line">        w = y[j]</span><br><span class="line">        Z[j][i] = <span class="number">0</span></span><br><span class="line">        <span class="keyword">for</span> n <span class="keyword">in</span> range(len(x_data)):</span><br><span class="line">            Z[j][i] = Z[j][i] + (y_data[n] - b - w* x_data[n])**<span class="number">2</span></span><br><span class="line">        Z[j][i] = Z[j][i]/len(x_data)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># Gradient Descent</span></span><br><span class="line">b = <span class="number">-120</span></span><br><span class="line">w = <span class="number">-4</span></span><br><span class="line">lr = <span class="number">1</span></span><br><span class="line">iteration = <span class="number">100000</span></span><br><span class="line">b_history = [b]</span><br><span class="line">w_history = [w]</span><br><span class="line">lr_b = <span class="number">0</span></span><br><span class="line">lr_w = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(iteration):</span><br><span class="line">    b_grad = <span class="number">0.0</span></span><br><span class="line">    w_grad = <span class="number">0.0</span></span><br><span class="line">    <span class="keyword">for</span> n <span class="keyword">in</span> range(len(x_data)):</span><br><span class="line">        b_grad = b_grad - <span class="number">2.0</span> * (y_data[n] - b - w * x_data[n]) * <span class="number">1.0</span></span><br><span class="line">        w_grad = w_grad - <span class="number">2.0</span> * (y_data[n] - b - w * x_data[n]) * x_data[n]</span><br><span class="line">    lr_b = lr_b + b_grad ** <span class="number">2</span></span><br><span class="line">    lr_w = lr_w + w_grad ** <span class="number">2</span></span><br><span class="line"></span><br><span class="line">    b = b - lr/np.sqrt(lr_b) * b_grad</span><br><span class="line">    w = w - lr/np.sqrt(lr_w) * w_grad</span><br><span class="line"></span><br><span class="line">    b_history.append(b)</span><br><span class="line">    w_history.append(w)</span><br><span class="line"></span><br><span class="line">plt.contour(x, y, Z, <span class="number">50</span>, alpha=<span class="number">0.5</span>, cmap=plt.get_cmap(<span class="string">'jet'</span>))</span><br><span class="line">plt.plot([<span class="number">-188.4</span>], [<span class="number">2.67</span>], <span class="string">'x'</span>, ms=<span class="number">12</span>, markeredgewidth=<span class="number">3</span>, color=<span class="string">'orange'</span>)</span><br><span class="line">plt.plot(b_history, w_history, <span class="string">'o-'</span>, ms=<span class="number">3</span>, lw=<span class="number">1.5</span>, color=<span class="string">'black'</span>)</span><br><span class="line">plt.xlim(<span class="number">-200</span>, <span class="number">-100</span>)</span><br><span class="line">plt.ylim(<span class="number">-5</span>, <span class="number">5</span>)</span><br><span class="line">plt.xlabel(<span class="string">r'$b$'</span>, fontsize=<span class="number">16</span>)</span><br><span class="line">plt.ylabel(<span class="string">r'$w$'</span>, fontsize=<span class="number">16</span>)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>机器学习</category>
+      </categories>
+      <tags>
+        <tag>机器学习</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>机器学习(一)</title>
+    <url>/2019/11/09/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E4%B8%80/</url>
+    <content><![CDATA[<p>视频资料：B站李宏毅机器学习（2017）</p>
+<p>Introduction of machine learning</p>
+<a id="more"></a>
+
+
+
+<h2 id="machine-ability"><a href="#machine-ability" class="headerlink" title="machine ability"></a>machine ability</h2><h3 id="hand-crafted-rules-–-if"><a href="#hand-crafted-rules-–-if" class="headerlink" title="hand-crafted rules – if"></a>hand-crafted rules – if</h3><p>缺点：</p>
+<ol>
+<li><p>难以考虑到到所有的情况，针对所有情况设定规则。</p>
+<p>不可能超越创造者</p>
+</li>
+<li><p>大量的规则需要大量的工程师</p>
+</li>
+</ol>
+<h3 id="machine-learning-≈-looking-for-a-function-from-data"><a href="#machine-learning-≈-looking-for-a-function-from-data" class="headerlink" title="machine-learning ≈ looking for a function from data"></a>machine-learning ≈ looking for a function from data</h3><p><strong>主要思想:</strong></p>
+<img src='机器学习-一/1.png'/>
+
+<p>利用训练数据<code>Training data(features, label)</code>过滤<code>function set</code>中的大量function，留下最好的function</p>
+<p><strong>主要步骤（参考大象装冰箱，只是简要概括）：</strong></p>
+<img src='机器学习-一/2.png'/>
+
+
+
+
+
+<h2 id="learning-map"><a href="#learning-map" class="headerlink" title="learning map"></a>learning map</h2><img src='机器学习-一/3.png'/>
+
+<h3 id="scenario（学习的情景）–depend-on-data"><a href="#scenario（学习的情景）–depend-on-data" class="headerlink" title="scenario（学习的情景）–depend on data"></a>scenario（学习的情景）–depend on data</h3><p><strong>Supervised Learning：</strong></p>
+<p>移步2.3，都是针对监督学习的例子。</p>
+<p>需要大量的Training data，Training Data可以告诉我们要找的那个function的Input与Output之间有什么样的关系(Function的<strong>output又常叫label</strong>)。</p>
+<p><strong>Semi-Supervised-learning：</strong>少量带标记的数据，大量无标记的数据。</p>
+<p><strong>Transfer-learning：</strong>少量带标记的数据，大量无标记的数据，但是这些无标记的数据和我们现在考虑的问题没有          </p>
+<p>​                                     什么关系。</p>
+<p><strong>Unsupervised Learning：</strong>就是想让机器学到无师自通，无任何带标记的数据。</p>
+<p>例1：让机器看大量的文章，看机器是否可以学会词汇的意思，比如用向量表示词汇。</p>
+<p>例2：让机器去动物园看一大堆，看机器是否能在看过动物后学会自己创造动物。</p>
+<p>例3：机器在看过大量图片后是否能学会自己生成图片。</p>
+<p><strong>Reinforcement learning：</strong></p>
+<p>我们不告诉机器正确答案，只告诉机器我们对它输出的评价，机器唯一知道的的就是它做的好与不好。更加符合人类真实学习的情景。</p>
+<p>Alpha Go is supervised learning + reinforcement learning.</p>
+<table>
+<thead>
+<tr>
+<th align="center">supervised learning</th>
+<th align="center">reinforcement learning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">大量的标签数据，相当于有人手把手教</td>
+<td align="center">我不教你，自己做，做完了会有得分，在批评中成长</td>
+</tr>
+<tr>
+<td align="center">向老师学习</td>
+<td align="center">从评价中学习</td>
+</tr>
+</tbody></table>
+<h3 id="task-–-depend-on-output"><a href="#task-–-depend-on-output" class="headerlink" title="task – depend on output"></a>task – depend on output</h3><p><strong>Regression：</strong>回归任务，目标函数的输出是标量</p>
+<p>例一：预测明天的PM2.5值，需要准备训练资料，如过去几天的PM2.5值</p>
+<p><strong>classification：</strong>分类任务，输出不同的选项</p>
+<ul>
+<li><p>二分类任务：两种相反意思的输出</p>
+<p>例：垃圾邮件分类</p>
+</li>
+<li><p>多分类任务：多种类型输出</p>
+<p>例：新闻分类</p>
+</li>
+</ul>
+<p><strong>Structured-learning：</strong>输出结构性的结果</p>
+<p>例一：根据声音序号生成完整句子</p>
+<p>例二：中英文翻译</p>
+<img src='机器学习-一/4.png'/>
+
+
+
+
+
+
+
+<h3 id="model-function-set"><a href="#model-function-set" class="headerlink" title="model/function set"></a>model/function set</h3><p><strong>linear model（简单）</strong></p>
+<p><strong>Non-Linear Model（复杂）：</strong></p>
+<ul>
+<li><p>Deep Learning</p>
+<p>例：Alpha go获得棋盘输入，在19*19种可能中选择一种输出</p>
+</li>
+<li><p>SVM，Decision Tree，K-NN</p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>机器学习</category>
+      </categories>
+      <tags>
+        <tag>机器学习</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>爬取新浪新闻评论(一)</title>
+    <url>/2019/11/08/%E7%88%AC%E5%8F%96%E6%96%B0%E6%B5%AA%E6%96%B0%E9%97%BB%E8%AF%84%E8%AE%BA-%E4%B8%80/</url>
+    <content><![CDATA[<p>本文介绍使用爬虫爬取新浪新闻评论。</p>
+<a id="more"></a>]]></content>
+      <tags>
+        <tag>爬虫</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>hexo搭建(一)</title>
+    <url>/2019/11/08/Hexo%E6%90%AD%E5%BB%BA/</url>
+    <content><![CDATA[<p>本文介绍hexo博客的简单搭建以及部署到本地服务器。</p>
+<a id="more"></a>
+
+<h2 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h2><h3 id="git"><a href="#git" class="headerlink" title="git"></a>git</h3><h3 id="node-js"><a href="#node-js" class="headerlink" title="node.js"></a>node.js</h3><p><a href="https://nodejs.org/en/" target="_blank" rel="noopener">官方网站</a></p>
+<img src= 'hexo搭建-一\1.png'/>
+
+<img src= 'hexo搭建-一\2.png'/>
+
+<p>按照默认设置，一直next即可。</p>
+<img src= 'hexo搭建-一\4.png'/>
+
+<p>包含node和npm，显示版本信息则安装成功。</p>
+<h3 id="添加镜像源"><a href="#添加镜像源" class="headerlink" title="添加镜像源"></a>添加镜像源</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">npm install -g cnpm --registry=https://registry.npm.taobao.org</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="安装Hexo"><a href="#安装Hexo" class="headerlink" title="安装Hexo"></a>安装Hexo</h2><h3 id="创建一个新文件夹"><a href="#创建一个新文件夹" class="headerlink" title="创建一个新文件夹"></a>创建一个新文件夹</h3><img src= 'hexo搭建-一\3.png'/>
+
+
+
+<p>切换到该文件下，将hexo安装到该文件夹下。</p>
+<img  src ='hexo搭建-一\7.png' />
+
+<h3 id="安装hexo"><a href="#安装hexo" class="headerlink" title="安装hexo"></a>安装hexo</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#下载hexo</span><br><span class="line">cnpm install -g hexo-cli</span><br><span class="line"></span><br><span class="line"># 进行初始化</span><br><span class="line">hexo init</span><br></pre></td></tr></table></figure>
+
+<p>目录结构:</p>
+<img src= 'hexo搭建-一\5.png'/>
+
+<h3 id="本地测试"><a href="#本地测试" class="headerlink" title="本地测试"></a>本地测试</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#清除缓存文件,修改后使用</span><br><span class="line">hexo clean</span><br><span class="line"></span><br><span class="line">#生成,修改后使用</span><br><span class="line">hexo g</span><br><span class="line"></span><br><span class="line">#部署到本地</span><br><span class="line">hexo s</span><br><span class="line"></span><br><span class="line">#部署到服务器</span><br><span class="line">hexo d</span><br></pre></td></tr></table></figure>
+
+<p>使用<code>hexo s</code>部署到本地后</p>
+<img src= 'hexo搭建-一\6.png'/>
+
+<p>在浏览器中输入<code>localhost:4000</code>可以看到效果</p>
+]]></content>
+      <tags>
+        <tag>hexo博客</tag>
+      </tags>
+  </entry>
+</search>
